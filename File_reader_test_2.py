@@ -66,12 +66,13 @@ def ranking_finder(year):
                     while len(line) < 10:
 
                         # check if there is place number
+                        #return false if number, return true if string. return false if under 5 characters, true if over 5 characters.
                         if not line[0].isdigit() or len(line[0]) >= 5: #if index 0 is not a number and is more than 4 characters
                             line.insert(0, "None")
                             print("no place:", line)
     
                         # check if there is team id
-                        '''if not line[1].isdigit() or line[1]:
+                        if not line[1].isdigit() or line[1]:
                             line.insert(1, "None")
                             print("no team id:", line)
     
@@ -89,7 +90,7 @@ def ranking_finder(year):
                         if line[4].isdigit():
                             line.insert(4, "None")
                             print("no regional name:", line)
-                        '''
+
                         print(line)
                         break
 
