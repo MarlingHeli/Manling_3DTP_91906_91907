@@ -11,56 +11,88 @@ points_dict = {
     "6": 3,
     "7": 2,
     "8": 1,
-} #remember: any other place is 1 point. DNS/DQ/Disqualified = 0 points.
+    "DNS": 0,
+    "DQ": 0,
+    "Disqualified": 0,
+    "None": 0,
+}  # remember: any other place is 1 point. DNS/DQ/Disqualified = 0 points.
+
 
 def ranking_finder(year):
     # check current directory
     os.chdir(directory)
-    #cwd = os.getcwd()
-    #print("current working directory:", cwd)
+    # cwd = os.getcwd()
+    # print("current working directory:", cwd)
 
     path = "WakaNats" + str(year)
-    #print("path:", path)
+    # print("path:", path)
     # change directory
     os.chdir(path)
     cwd = os.getcwd()
     print("new working directory:", cwd)
 
     # count number of files
-    dir = os.listdir()
-    num_files = len(dir)
+    new_directory = os.listdir()
+    num_files = len(new_directory)
     print("number of files:", num_files)
 
     # filter for final files
     final_files = []
-    for file in dir:
+    for file in new_directory:
         if "Final" in file:
             final_files.append(file)
-    #print(f"\nlist of final files:\n{final_files}\n")
+    # print(f"\nlist of final files:\n{final_files}\n")
 
     # read each final file
     for file in final_files:
         with open(file, "r") as contents:
             # skip first line
-            #contents.readline()
+            contents.readline()
+            contents.readline()
 
             for line in contents:
-                #group names together
+                # group names together
                 line = line.replace(" ", "-")
-                #remove commas
-                line = line.replace (",", " ").strip().split()
+                # remove commas
+                line = line.replace(",", " ").strip().split()
 
-                if int(line[0]) > 100:
-                    line = ["-"] + line
-                    print("no place:", line)
+                #####################################################################################################
+                # Ensure the line has at least 10 elements
 
-                elif len(line[1]) <5:
-                    line = line[0] + ["-"] + line[1:]
-                    print("no team id:", line)
-
-                else:
+                if len(line) >= 10:
                     print(line)
-            print()
 
+                else: 
+                    while len(line) < 10:
+
+                        # check if there is place number
+                        if not line[0].isdigit() or len(line[0]) >= 5: #if index 0 is not a number and is more than 4 characters
+                            line.insert(0, "None")
+                            print("no place:", line)
+    
+                        # check if there is team id
+                        '''if not line[1].isdigit() or line[1]:
+                            line.insert(1, "None")
+                            print("no team id:", line)
+    
+                        # check if there is lane number
+                        if not line[2].isdigit():
+                            line.insert(2, "None")
+                            print("no lane number:", line)
+    
+                        # check if there is team name
+                        if line[3].isdigit():
+                            line.insert(3, "None")
+                            print("no team name:", line)
+    
+                        # check if there is regional name
+                        if line[4].isdigit():
+                            line.insert(4, "None")
+                            print("no regional name:", line)
+                        '''
+                        print(line)
+                        break
+
+            print()
 
 ranking_finder(year=int(input("Select year: 2017, 2018\n")))
