@@ -17,7 +17,7 @@ points_dict = {
     "None": 0,
 }  # remember: any other place is 1 point. DNS/DQ/Disqualified = 0 points.
 
-
+ranking_dict = {}
 def ranking_finder(year):
     # check current directory
     os.chdir(directory)
@@ -57,8 +57,7 @@ def ranking_finder(year):
                 line = line.replace(",", " ").strip().split()
 
                 #####################################################################################################
-                # Ensure the line has at least 10 elements
-
+                # Look for missing items in the line
                 if len(line) >= 10:
                     print(line)
 
@@ -66,30 +65,29 @@ def ranking_finder(year):
                     while len(line) < 10:
 
                         # check if there is place number
-                        #return false if number, return true if string. return false if under 5 characters, true if over 5 characters.
-                        if not line[0].isdigit() or len(line[0]) >= 5: #if index 0 is not a number and is more than 4 characters
+                        if not line[0].isdigit() or len(line[0]) >= 5: #if index 0 is not a number or is more than/or 5 characters
                             line.insert(0, "None")
-                            print("no place:", line)
+                            print("no place:")
     
                         # check if there is team id
-                        if not line[1].isdigit() or line[1]:
+                        if not line[1].isdigit() or len(line[1]) <=4: #if index 1 is not a number or is less than/or 4 characters
                             line.insert(1, "None")
-                            print("no team id:", line)
+                            print("no team id:")
     
                         # check if there is lane number
-                        if not line[2].isdigit():
+                        if not line[2].isdigit(): #if index 2 is not a number
                             line.insert(2, "None")
-                            print("no lane number:", line)
+                            print("no lane number:")
     
                         # check if there is team name
-                        if line[3].isdigit():
+                        if any(chr.isdigit() for chr in line[4]) and not line[3].isdigit(): #if index 4 has numbers and index 3 is string
                             line.insert(3, "None")
-                            print("no team name:", line)
+                            print("no team name:")
     
                         # check if there is regional name
-                        if line[4].isdigit():
+                        if any(chr.isdigit() for chr in line[4]): #if any number in index 4
                             line.insert(4, "None")
-                            print("no regional name:", line)
+                            print("no regional name:")
 
                         print(line)
                         break
