@@ -58,7 +58,7 @@ def ranking_finder(year):
 
                 #####################################################################################################
                 # Look for missing items in the line
-                if len(line) >= 10:
+                if len(line) == 10:
                     print(line)
 
                 else: 
@@ -78,9 +78,9 @@ def ranking_finder(year):
                         if not line[2].isdigit(): #if index 2 is not a number
                             line.insert(2, "None")
                             print("no lane number:")
-    
+
                         # check if there is team name
-                        if any(chr.isdigit() for chr in line[4]) and not line[3].isdigit(): #if index 4 has numbers and index 3 is string
+                        if any(chr.isdigit() for chr in line[3]): #if index 3 has numbers
                             line.insert(3, "None")
                             print("no team name:")
     
@@ -89,9 +89,11 @@ def ranking_finder(year):
                             line.insert(4, "None")
                             print("no regional name:")
 
+                        ranking_dict[(line[4])] = line[0]
                         print(line)
                         break
 
             print()
+    print(ranking_dict)
 
 ranking_finder(year=int(input("Select year: 2017, 2018\n")))
