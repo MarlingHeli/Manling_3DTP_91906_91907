@@ -1,34 +1,42 @@
 import os
 
-directory = ("C:/Users/hmarl/OneDrive/Documents/DTP3/Programming/Assessment/Waka Ama data/3.7B resource files")
-
-points_dict = {
-    "1": 8,
-    "2": 7,
-    "3": 6,
-    "4": 5,
-    "5": 4,
-    "6": 3,
-    "7": 2,
-    "8": 1,
-    "DNS": 0,
-    "DQ": 0,
-    "Disqualified": 0,
-    "None": 0,
-}  # remember: any other place is 1 point. DNS/DQ/Disqualified = 0 points.
-
 ranking_dict = {}
-points = 0
+refined_ranking = {}
+
+def points_calculator(place, name):  # assign points based on place number
+    points_dict = {
+        "1": 8,
+        "2": 7,
+        "3": 6,
+        "4": 5,
+        "5": 4,
+        "6": 3,
+        "7": 2,
+        "8": 1,
+    }
+    # initialise keys and values
+    if name not in ranking_dict:
+        ranking_dict[name] = 0
+
+    # give 0 points to disqualified teams
+    if place == "DNS" or place == "DQ" or place == "Disqualified":
+        ranking_dict[name] += 0
+        #print("points: +0")
+    else:
+        # retrieve points based on place number and add to ranking_dict.
+        # retrieves 1 point if place number is not in points_dict.
+        ranking_dict[name] += points_dict.get(place, 1)
+        #print(f"points: +{points_dict.get(place, 1)}")
+
+        #print(f"{ranking_dict}\n")
+        return ranking_dict
 
 
-def file_reader(year):
-    # check current directory
+def file_reader(year):  # gets number of final files and filters for place number and regional name
+    # set current directory
     os.chdir(directory)
-    # cwd = os.getcwd()
-    # print("current working directory:", cwd)
 
-    path = "WakaNats" + str(year)
-    # print("path:", path)
+    path = f"WakaNats{year}"
     # change directory
     os.chdir(path)
     cwd = os.getcwd()
@@ -37,14 +45,13 @@ def file_reader(year):
     # count number of files
     new_directory = os.listdir()
     num_files = len(new_directory)
-    print("number of files:", num_files)
+    print(f"number of final files:{num_files}\n")
 
     # filter for final files
     final_files = []
     for file in new_directory:
         if "Final" in file:
             final_files.append(file)
-    # print(f"\nlist of final files:\n{final_files}\n")
 
     # read each final file
     for file in final_files:
@@ -53,19 +60,42 @@ def file_reader(year):
             contents.readline()
 
             for record in contents:
-                lines = record.strip().split("\n") #split file into lines at line breaks
-                #print("lines:", lines)
+                # split file into lines at line breaks
+                lines = record.strip().split("\n")
                 for line in lines:
-                    line = line.split(",") #split values in line at the commas
-                    print("split at commas:", line)
+                    # split values in line at the commas
+                    line = line.split(",")
+                    #print(line)
 
-                    if line[0] is not None: #check if there is a place number
-                        try:
-                            print(f"place, association: {int(line[0])}, {line[5]}\n")
-                        except:
-                            print(f"Error: value missing. Ignoring line:\n{line}\n") #runs if place number is not int
+                    # error if place number is empty string
+                    if line[0] == "":
+                        print(f"Error: place number missing. Ignoring line:\n{line}\n")
+                    elif line[5] == "":
+                        print(f"Error: regional association missing. Ignoring line:\n{line}\n")
+                    else:
+                        #print(f"place, association: {line[0]}, {line[5]}")
+                        # calculate points
+                        points_calculator(line[0], line[5])
 
-            print() # newline for readability
+    # sort dict in descending order
+    refined_ranking = dict(sorted(ranking_dict.items(),
+                                  key=lambda item: item[1], reverse=True))
+
+    #print(f"\n{refined_ranking}")
+    print("---\nRegional Association Points")
+    for key, value in refined_ranking.items():
+        print(f"{key}, {value}")
+    return refined_ranking
 
 
-file_reader(year=int(input("Select year: 2017, 2018\n")))
+directory = input("Please enter your directory for 3.7B resource files, or press enter to use the default directory:"
+                  "\nC:/Users/hmarl/OneDrive/Documents/DTP3/Programming/Assessment/Waka Ama data/3.7B resource files\n")
+
+default_dir = "C:/Users/hmarl/OneDrive/Documents/DTP3/Programming/Assessment/Waka Ama data/3.7B resource files"
+
+#use default directory if user presses enter
+if directory == "":
+    directory = default_dir
+
+file_reader(year=int(input("\nSelect year: 2017, 2018\n")))
+
