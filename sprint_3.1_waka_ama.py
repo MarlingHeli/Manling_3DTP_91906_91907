@@ -9,7 +9,7 @@ ranking_dict = {}
 folder_dict = {}
 
 
-class Menu:
+class Menu: # menu screen that also error checks input
     def __init__(self):
         # paragraph and button font
         font = ("Arial", "11")
@@ -91,13 +91,13 @@ class Menu:
                 self.menu_buttons.destroy()
                 self.menu_description.destroy()
                 self.menu_heading.destroy()
-                Ranker()
+                Ranker(folder_url)
             else:
                 self.error_label.config(text="Sorry! Folder not found for the selected year.")
         else:
             self.error_label.config(text="Failed to get directory contents.")
 
-    def year_check(self):
+    def year_check(self): # error check year input
 
         try:
             year_input = self.year_var.get()
@@ -113,8 +113,8 @@ class Menu:
             self.error_label.config(text="Please enter a whole number.")
 
 
-class Ranker:
-    def __init__(self):
+class Ranker: # ranking calculator screen that calculates points
+    def __init__(self, folder_url):
         self.frame = Frame(bg="#FAFFFD")
         self.frame.grid()
 
@@ -126,6 +126,85 @@ class Ranker:
                                   text="Ranking Calculator",
                                   font=("Arial", "22", "bold"), bg="#FAFFFD")
         self.menu_heading.grid(row=0, pady=(60, 10))
+        self.folder_reader(folder_url)
+
+    def points_calculator(self, place, name):  # assign points based on place number
+        points_dict = {
+            "1": 8,
+            "2": 7,
+            "3": 6,
+            "4": 5,
+            "5": 4,
+            "6": 3,
+            "7": 2,
+            "8": 1,
+        }
+        # initialise keys and values
+        if self.name not in ranking_dict:
+            ranking_dict[name] = 0
+
+        # give 0 points to disqualified teams
+        if place == "DNS" or place == "DQ" or place == "Disqualified":
+            ranking_dict[name] += 0
+            # print("points: +0")
+        else:
+            # retrieve points based on place number and add to ranking_dict.
+            # retrieves 1 point if place number is not in points_dict.
+            ranking_dict[name] += points_dict.get(place, 1)
+
+            return ranking_dict
+
+    def file_reader(self, file_url):  # filters for place number and regional name
+        response = requests.get(file_url)
+        if response.status_code == 200:
+            contents = response.text.strip().split("\n")
+            # skip the first line
+            for record in contents[1:]:
+                # split line into items at commas
+                line = record.split(",")
+                # check for empty place
+                if line[0] == "":
+                    print(f"Error: place number missing. Ignoring line:\n{line}\n")
+                # check for empty association name
+                elif line[5] == "":
+                    print(f"Error: regional association missing. Ignoring line:\n{line}\n")
+                else:
+                    self.points_calculator(line[0], line[5])
+
+        else:
+            print("Failed to get file contents :(")
+
+    def folder_reader(self, year_url):  # filters for and gets number of final files
+        response = requests.get(year_url)
+        # if successfully get url for year folder
+        if response.status_code == 200:
+            print("\nFolder found!")
+            # get contents of year folder
+            contents = response.json()
+            # count number of files
+            print(f"number of files: {len(contents)}\n")
+
+            final_files = []
+            for file in contents:
+                # filter for final files
+                if "Final" in file["name"]:
+                    # get download url for each final file
+                    final_files.append(file["download_url"])
+
+            # speed up reading
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                # start 3 parallel processes using file_reader function and final files dict
+                executor.map(self.file_reader, final_files)
+
+            # print ranking results
+            refined_ranking = dict(sorted(ranking_dict.items(), key=lambda item: item[1], reverse=True))
+            print("---\nRegional Association Points")
+            for key, value in refined_ranking.items():
+                print(f"{key}, {value}")
+            # return refined_ranking
+
+        else:
+            print("Failed to get folder contents :(")
 
 
 class Info:
