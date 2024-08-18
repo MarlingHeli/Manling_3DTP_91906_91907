@@ -1,10 +1,10 @@
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
 # use github repo for directory
 api_url = "https://api.github.com/repos/MarlingHeli/Manling_3DTP_91906_91907/contents/Waka Ama data/3.7B resource files"
 
 ranking_dict = {}
-refined_ranking = {}
 folder_dict = {}
 
 
@@ -31,20 +31,16 @@ def points_calculator(place, name):  # assign points based on place number
         # retrieve points based on place number and add to ranking_dict.
         # retrieves 1 point if place number is not in points_dict.
         ranking_dict[name] += points_dict.get(place, 1)
-        # print(f"points: +{points_dict.get(place, 1)}")
 
-        # print(f"{ranking_dict}\n")
         return ranking_dict
 
 
 def file_reader(file_url):  # filters for place number and regional name
     response = requests.get(file_url)
     if response.status_code == 200:
-        #print(response.text)
         contents = response.text.strip().split("\n")
-
-        for record in contents[1:]:  # skip the first line
-            #print(record)
+        # skip the first line
+        for record in contents[1:]:
             # split line into items at commas
             line = record.split(",")
             # check for empty place
@@ -59,37 +55,35 @@ def file_reader(file_url):  # filters for place number and regional name
     else:
         print("Failed to get file contents :(")
 
-def folder_reader(year_url):  # gets number of final files
+
+def folder_reader(year_url):  # filters for and gets number of final files
     response = requests.get(year_url)
     # if successfully get url for year folder
     if response.status_code == 200:
         print("\nFolder found!")
         # get contents of year folder
         contents = response.json()
-        # print("contents", contents)
-
         # count number of files
         print(f"number of files: {len(contents)}\n")
 
-        final_files = {}
+        final_files = []
         for file in contents:
-            # print("file", file)
             # filter for final files
             if "Final" in file["name"]:
                 # get download url for each final file
-                final_files[file["name"]] = file["download_url"]
+                final_files.append(file["download_url"])
 
-        #print("final files", final_files)
+        # speed up reading
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            # start 3 parallel processes using file_reader function and final files dict
+            executor.map(file_reader, final_files)
 
-        # download data from each final file
-        for file in final_files:
-            file_reader(final_files[file])
-
+        # print ranking results
         refined_ranking = dict(sorted(ranking_dict.items(), key=lambda item: item[1], reverse=True))
         print("---\nRegional Association Points")
         for key, value in refined_ranking.items():
             print(f"{key}, {value}")
-        return refined_ranking
+        #return refined_ranking
 
     else:
         print("Failed to get folder contents :(")
@@ -102,7 +96,6 @@ def get_directory(url):  # get contents of 3.7B folder from github directory
     if response.status_code == 200:
         # grab all the information about files in the 3.7B folder (as dictionaries in list)
         contents = response.json()
-        # print(contents)
 
         # add folder name and url to dictionary
         for item in contents:
@@ -111,18 +104,25 @@ def get_directory(url):  # get contents of 3.7B folder from github directory
                 folder_dict[item["name"]] = item["url"]
 
         print(f"Folders found: {', '.join(folder_dict.keys())}")
-        # print(folder_dict)
 
         # select year folder
-        year = int(input("\nSelect year (integer):\n"))
-        folder = f"WakaNats{year}"
-
-        if folder in folder_dict:
-            # get url based on folder selected
-            folder_url = folder_dict[folder]
-            folder_reader(folder_url)
-        else:
-            print("Sorry! Folder not found :(")
+        while True:
+            try:
+                year = int(input("Select year (integer):\n"))
+                folder = f"WakaNats{year}"
+                # set boundaries for year input
+                if 2017 <= year <= 2030:
+                    if folder in folder_dict:
+                        # get url based on folder selected
+                        folder_url = folder_dict[folder]
+                        folder_reader(folder_url)
+                        break
+                    else:
+                        print("Sorry! Folder not found :(. Please try again\n")
+                else:
+                    print("Please select a year within the range of 2017 to 2030.\n")
+            except ValueError:
+                print("Please enter a whole number\n")
 
     else:
         print("Failed to get directory contents :(")
