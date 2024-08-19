@@ -95,7 +95,7 @@ class Menu: # menu screen that also error checks input
             else:
                 self.error_label.config(text="Sorry! Folder not found for the selected year.")
         else:
-            self.error_label.config(text="Failed to get directory contents.")
+            self.error_label.config(text=f"Failed to get directory contents. Status code: {response}")
 
     def year_check(self): # error check year input
 
