@@ -2,28 +2,31 @@ from tkinter import *
 import requests
 from concurrent.futures import ThreadPoolExecutor
 
-# use github repo for directory
+# use GitHub repo for directory
 api_url = "https://api.github.com/repos/MarlingHeli/Manling_3DTP_91906_91907/contents/Waka Ama data/3.7B resource files"
 
 ranking_dict = {}
 folder_dict = {}
 
+# paragraph and button font
+font = ("Arial", "11")
+# background colour
+bg = "#FAFFFD"
 
-class Menu: # menu screen that also error checks input
+
+class Menu:  # menu screen that also error checks input
     def __init__(self):
-        # paragraph and button font
-        font = ("Arial", "11")
 
-        self.frame = Frame(bg="#FAFFFD")
+        self.frame = Frame(bg=bg)
         self.frame.grid()
 
         # give buttons their own grid
-        self.menu_buttons = Frame(bg="#FAFFFD")
+        self.menu_buttons = Frame(bg=bg)
         self.menu_buttons.grid()
 
         self.menu_heading = Label(self.frame,
                                   text="Waka Ama ranking finder",
-                                  font=("Arial", "22", "bold"), bg="#FAFFFD")
+                                  font=("Arial", "22", "bold"), bg=bg)
         self.menu_heading.grid(row=0, pady=(60, 10))
         # add description
         self.menu_description = Label(self.frame,
@@ -31,15 +34,15 @@ class Menu: # menu screen that also error checks input
                                            "Use this program to check the results of a "
                                            "previous competition by year.",
                                       font=("Arial", "12"),
-                                      wrap=530, width=80, justify="left", bg="#FAFFFD")
+                                      wrap=530, width=80, justify="left", bg=bg)
         self.menu_description.grid(row=1)
 
         # add entry field for years
         self.year_var = StringVar()
         self.year_var.set("")
-        self.year_label = Label(self.menu_buttons, text="Enter year:", font=("Arial", "12"), bg="#FAFFFD")
+        self.year_label = Label(self.menu_buttons, text="Enter year:", font=("Arial", "12"), bg=bg)
         self.year_entry = Entry(self.menu_buttons, textvariable=self.year_var, font=("Arial", "20"),
-                                width=5, bg="#FAFFFD", highlightbackground="#000000", highlightthickness=1)
+                                width=5, bg=bg, highlightbackground="#000000", highlightthickness=1)
         self.year_label.grid(row=1, column=1, pady=(230, 10))
         self.year_entry.grid(row=1, column=2, pady=(230, 10))
 
@@ -60,13 +63,13 @@ class Menu: # menu screen that also error checks input
 
         self.button_help = Button(self.button_help_border, text="Help/information",
                                   font=font, bg="#DAFFC7", bd=0, highlightthickness=5,
-                                  )
+                                  command=Info)
         self.button_help.grid(row=2, column=4)
 
         # give error message their own frame
         self.error_frame = Frame()
         self.error_frame.grid()
-        self.error_label = Label(self.error_frame, text="", font=font, fg="red", bg="#FAFFFD")
+        self.error_label = Label(self.error_frame, text="", font=font, fg="red", bg=bg)
         self.error_label.grid(row=1)
 
     def get_directory(self, url, year):  # get contents of 3.7B folder from github directory
@@ -89,15 +92,14 @@ class Menu: # menu screen that also error checks input
                 folder_url = folder_dict[folder]
                 # hide menu elements for ranking calculator screen
                 self.menu_buttons.destroy()
-                self.menu_description.destroy()
-                self.menu_heading.destroy()
-                Ranker(folder_url)
+                self.frame.destroy()
+                Ranker(folder_url, year)
             else:
                 self.error_label.config(text="Sorry! Folder not found for the selected year.")
         else:
-            self.error_label.config(text=f"Failed to get directory contents. Status code: {response}")
+            self.error_label.config(text="Failed to get directory contents.")
 
-    def year_check(self): # error check year input
+    def year_check(self):  # error check year input
 
         try:
             year_input = self.year_var.get()
@@ -113,19 +115,24 @@ class Menu: # menu screen that also error checks input
             self.error_label.config(text="Please enter a whole number.")
 
 
-class Ranker: # ranking calculator screen that calculates points
-    def __init__(self, folder_url):
+class Ranker:  # ranking calculator screen that calculates points
+    def __init__(self, folder_url, year):
         self.frame = Frame(bg="#FAFFFD")
         self.frame.grid()
 
-        # give buttons their own grid
-        self.menu_buttons = Frame(bg="#FAFFFD")
-        self.menu_buttons.grid()
+        self.ranker_heading = Label(self.frame,
+                                    text=f"Ranking Calculator - {year}",
+                                    font=("Arial", "22", "bold"), bg=bg)
+        self.ranker_heading.grid(row=0, pady=(20,0))
 
-        self.menu_heading = Label(self.frame,
-                                  text="Ranking Calculator",
-                                  font=("Arial", "22", "bold"), bg="#FAFFFD")
-        self.menu_heading.grid(row=0, pady=(60, 10))
+        # create results list
+        self.results = Listbox(self.frame, bg="white", width=70, height=15,
+                               font=font)
+
+        # add error label
+        self.error_label = Label(self.frame, text="", font=font, fg="red", bg=bg)
+        self.error_label.grid(row=3)
+
         self.folder_reader(folder_url)
 
     def points_calculator(self, place, name):  # assign points based on place number
@@ -140,7 +147,7 @@ class Ranker: # ranking calculator screen that calculates points
             "8": 1,
         }
         # initialise keys and values
-        if self.name not in ranking_dict:
+        if name not in ranking_dict:
             ranking_dict[name] = 0
 
         # give 0 points to disqualified teams
@@ -163,26 +170,24 @@ class Ranker: # ranking calculator screen that calculates points
                 # split line into items at commas
                 line = record.split(",")
                 # check for empty place
-                if line[0] == "":
-                    print(f"Error: place number missing. Ignoring line:\n{line}\n")
-                # check for empty association name
-                elif line[5] == "":
-                    print(f"Error: regional association missing. Ignoring line:\n{line}\n")
-                else:
+                if not line[0] == "" or line[5] == "":
                     self.points_calculator(line[0], line[5])
 
         else:
-            print("Failed to get file contents :(")
+            self.error_label.config(text="Failed to get file contents :(")
 
     def folder_reader(self, year_url):  # filters for and gets number of final files
         response = requests.get(year_url)
         # if successfully get url for year folder
         if response.status_code == 200:
-            print("\nFolder found!")
+            # print("\nFolder found!")
             # get contents of year folder
             contents = response.json()
+
             # count number of files
-            print(f"number of files: {len(contents)}\n")
+            label_files = Label(self.frame, text=f"Number of files: {len(contents)}", font=font,
+                                bg=bg)
+            label_files.grid(row=1, pady=3)
 
             final_files = []
             for file in contents:
@@ -198,27 +203,31 @@ class Ranker: # ranking calculator screen that calculates points
 
             # print ranking results
             refined_ranking = dict(sorted(ranking_dict.items(), key=lambda item: item[1], reverse=True))
-            print("---\nRegional Association Points")
+            self.results.insert(0, "Regional Association Points")
+            index = 1
             for key, value in refined_ranking.items():
-                print(f"{key}, {value}")
-            # return refined_ranking
+                self.results.insert(index, f"{index} - {key}, {value}")
+                index += 1
+
+            # display results list
+            self.results.grid(row=2, padx=50)
 
         else:
-            print("Failed to get folder contents :(")
+            self.error_label.config(text="Failed to get folder contents :(")
 
 
 class Info:
     def __init__(self):
-        self.frame = Frame(bg="#FAFFFD")
+        self.frame = Frame(bg=bg)
         self.frame.grid()
 
         # give buttons their own grid
-        self.menu_buttons = Frame(bg="#FAFFFD")
+        self.menu_buttons = Frame(bg=bg)
         self.menu_buttons.grid()
 
         self.menu_heading = Label(self.frame,
                                   text="Help/Information",
-                                  font=("Arial", "22", "bold"), bg="#FAFFFD")
+                                  font=("Arial", "22", "bold"), bg=bg)
         self.menu_heading.grid(row=0, pady=(60, 10))
 
 
@@ -227,6 +236,6 @@ if __name__ == "__main__":
     window = Tk()
     window.title("Waka Ama ranking finder")
     window.geometry("700x500")
-    window.configure(bg="#FAFFFD")
+    window.configure(bg=bg)
     Menu()
     window.mainloop()
