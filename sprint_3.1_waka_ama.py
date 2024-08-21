@@ -9,14 +9,14 @@ ranking_dict = {}
 folder_dict = {}
 
 # paragraph and button font
-font = ("Arial", "11")
+font = ("Arial", "12")
 # background colour
 bg = "#FAFFFD"
 
 
+#######################################################################################################################
 class Menu:  # menu screen that also error checks input
     def __init__(self):
-
         self.frame = Frame(bg=bg)
         self.frame.grid()
 
@@ -90,17 +90,17 @@ class Menu:  # menu screen that also error checks input
 
             if folder in folder_dict:
                 folder_url = folder_dict[folder]
+                Ranker(folder_url, year)
                 # hide menu elements for ranking calculator screen
                 self.menu_buttons.destroy()
                 self.frame.destroy()
-                Ranker(folder_url, year)
+                self.error_frame.destroy()
             else:
                 self.error_label.config(text="Sorry! Folder not found for the selected year.")
         else:
-            self.error_label.config(text="Failed to get directory contents.")
+            self.error_label.config(text=f"Failed to get directory contents. Status code: {response}")
 
     def year_check(self):  # error check year input
-
         try:
             year_input = self.year_var.get()
             year = int(year_input)
@@ -115,6 +115,7 @@ class Menu:  # menu screen that also error checks input
             self.error_label.config(text="Please enter a whole number.")
 
 
+#######################################################################################################################
 class Ranker:  # ranking calculator screen that calculates points
     def __init__(self, folder_url, year):
         self.frame = Frame(bg="#FAFFFD")
@@ -123,15 +124,57 @@ class Ranker:  # ranking calculator screen that calculates points
         self.ranker_heading = Label(self.frame,
                                     text=f"Ranking Calculator - {year}",
                                     font=("Arial", "22", "bold"), bg=bg)
-        self.ranker_heading.grid(row=0, pady=(20,0))
+        self.ranker_heading.grid(row=0, pady=(35, 5))
+
+        self.ranker_description = Label(self.frame,
+                                        text="Below is a preview of the rankings. To download the file "
+                                             "as a .csv file, click 'Export to csv'.",
+                                        font=("Arial", "12"),
+                                        wrap=530, width=80, justify="left", bg=bg)
+        self.ranker_description.grid(row=1, pady=(5, 3))
+
+        self.window_frame = Frame()
+        self.window_frame.grid()
+
+        # create scroll bar
+        self.scrollbar = Scrollbar(self.window_frame)
+        self.scrollbar.grid(row=1, column=2)
 
         # create results list
-        self.results = Listbox(self.frame, bg="white", width=70, height=15,
-                               font=font)
+        self.results = Listbox(self.window_frame, bg="white", width=60, height=10,
+                               font=font, yscrollcommand=self.scrollbar.set)
+
+        # give buttons their own grid
+        self.ranker_buttons = Frame(bg=bg)
+        self.ranker_buttons.grid(pady=(30, 10))
+
+        # give buttons a consistent black border
+        self.button_csv_border = Frame(self.ranker_buttons, highlightbackground="#000000",
+                                       highlightthickness=1, bd=1)
+        self.button_csv_border.grid(row=1, column=1, padx=50)
+
+        self.button_return_border = Frame(self.ranker_buttons, highlightbackground="#000000",
+                                          highlightthickness=1, bd=1)
+        self.button_return_border.grid(row=1, column=2, padx=50)
+
+        # create buttons
+        self.button_csv = Button(self.button_csv_border, text="Export to csv",
+                                 font=font, bg="#BAFFD3", bd=0, highlightthickness=5,
+                                 )
+        self.button_csv.grid(row=1, column=1)
+        # return to menu
+        self.button_return = Button(self.button_return_border, text="Return",
+                                    font=font, bg="#C9FFDB", bd=0, highlightthickness=5,
+                                    command=lambda: [self.frame.destroy(), self.window_frame.destroy(),
+                                                     self.ranker_buttons.destroy(), Menu()])
+        self.button_return.grid(row=1, column=2)
+
+        self.error_frame = Frame(bg=bg)
+        self.error_frame.grid()
 
         # add error label
-        self.error_label = Label(self.frame, text="", font=font, fg="red", bg=bg)
-        self.error_label.grid(row=3)
+        self.error_label = Label(self.window_frame, text="error", font=font, fg="red")
+        self.error_label.grid(row=1)
 
         self.folder_reader(folder_url)
 
@@ -170,9 +213,8 @@ class Ranker:  # ranking calculator screen that calculates points
                 # split line into items at commas
                 line = record.split(",")
                 # check for empty place
-                if not line[0] == "" or line[5] == "":
+                if line[0] != "" and line[5] != "":
                     self.points_calculator(line[0], line[5])
-
         else:
             self.error_label.config(text="Failed to get file contents :(")
 
@@ -187,7 +229,7 @@ class Ranker:  # ranking calculator screen that calculates points
             # count number of files
             label_files = Label(self.frame, text=f"Number of files: {len(contents)}", font=font,
                                 bg=bg)
-            label_files.grid(row=1, pady=3)
+            label_files.grid(row=2)
 
             final_files = []
             for file in contents:
@@ -201,7 +243,7 @@ class Ranker:  # ranking calculator screen that calculates points
                 # start 3 parallel processes using file_reader function and final files dict
                 executor.map(self.file_reader, final_files)
 
-            # print ranking results
+            # print ranking results in descending order
             refined_ranking = dict(sorted(ranking_dict.items(), key=lambda item: item[1], reverse=True))
             self.results.insert(0, "Regional Association Points")
             index = 1
@@ -210,27 +252,30 @@ class Ranker:  # ranking calculator screen that calculates points
                 index += 1
 
             # display results list
-            self.results.grid(row=2, padx=50)
+            self.results.grid(row=1, column=1)
+            self.scrollbar.config(command=self.results.yview)
 
         else:
             self.error_label.config(text="Failed to get folder contents :(")
 
 
+#######################################################################################################################
 class Info:
     def __init__(self):
         self.frame = Frame(bg=bg)
         self.frame.grid()
 
         # give buttons their own grid
-        self.menu_buttons = Frame(bg=bg)
-        self.menu_buttons.grid()
+        self.info_buttons = Frame(bg=bg)
+        self.info_buttons.grid()
 
-        self.menu_heading = Label(self.frame,
+        self.info_heading = Label(self.frame,
                                   text="Help/Information",
                                   font=("Arial", "22", "bold"), bg=bg)
-        self.menu_heading.grid(row=0, pady=(60, 10))
+        self.info_heading.grid(row=0, pady=(60, 10))
 
 
+#######################################################################################################################
 # keep window on screen
 if __name__ == "__main__":
     window = Tk()
