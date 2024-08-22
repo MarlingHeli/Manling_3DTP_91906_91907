@@ -63,7 +63,8 @@ class Menu:  # menu screen that also error checks input
 
         self.button_help = Button(self.button_help_border, text="Help/information",
                                   font=font, bg="#DAFFC7", bd=0, highlightthickness=5,
-                                  command=Info)
+                                  command=lambda: [self.frame.destroy(), self.menu_buttons.destroy(),
+                                                   self.error_frame.destroy(), Info()])
         self.button_help.grid(row=2, column=4)
 
         # give error message their own frame
@@ -95,11 +96,11 @@ class Menu:  # menu screen that also error checks input
                 self.loading_label.grid(row=1)
                 self.frame.update()
                 folder_url = folder_dict[folder]
-                Ranker(folder_url, year)
                 # hide menu elements for ranking calculator screen
                 self.menu_buttons.destroy()
                 self.frame.destroy()
                 self.error_frame.destroy()
+                Ranker(folder_url, year)
             else:
                 self.error_label.config(text="Sorry! Folder not found for the selected year.")
         else:
@@ -172,7 +173,7 @@ class Ranker:  # ranking calculator screen that calculates points
         self.button_return = Button(self.button_return_border, text="Return",
                                     font=font, bg="#C9FFDB", bd=0, highlightthickness=5,
                                     command=lambda: [self.frame.destroy(), self.window_canvas.destroy(),
-                                                     self.ranker_buttons.destroy(), Menu()])
+                                                     self.ranker_buttons.destroy(), self.error_frame.destroy(), Menu()])
         self.button_return.grid(row=1, column=2)
 
         self.error_frame = Frame(bg=bg)
@@ -272,13 +273,35 @@ class Info:
         self.frame.grid()
 
         # give buttons their own grid
-        self.info_buttons = Frame(bg=bg)
-        self.info_buttons.grid()
+        self.info_button = Frame(bg=bg)
+        self.info_button.grid()
 
         self.info_heading = Label(self.frame,
                                   text="Help/Information",
                                   font=("Arial", "22", "bold"), bg=bg)
-        self.info_heading.grid(row=0, pady=(60, 10))
+        self.info_heading.grid(row=0, pady=(40, 10))
+        info = "This program reads Waka Ama's competition data, calculates the total points earned by each" \
+               "association, and ranks them. Since this program sources the data from GitHub (online), factors like " \
+               "the network, data size, server response time, etc., can influence how quickly the program processes " \
+               "files.\n\nHow to use the program:\nAt the Menu screen, type in the year that you want the program to" \
+               " analyse. The earliest year is 2017 and latest year is 2030. The program will check whether that year" \
+               " exists as a folder, then produces the results. You will have the option to download the results as a" \
+               ".csv file. The .csv file downloaded will be named WakaAmaRanking{year}, where {year} is the year that" \
+               "you selected.\n\nClicking the 'Return' button takes you back to the Menu.\n\nTo close the program, " \
+               "press the x at the top right of the window."
+        self.info_description = Label(self.frame, text=info, font=font,
+                                      wrap=530, width=80, justify="left", bg=bg)
+        self.info_description.grid(row=2)
+
+        self.button_return_border = Frame(self.info_button, highlightbackground="#000000",
+                                          highlightthickness=1, bd=1)
+        self.button_return_border.grid(row=1, column=2, pady=(20, 10))
+
+        # create buttons
+        self.button_return = Button(self.button_return_border, text="Return",
+                                    font=font, bg="#BAFFD3", bd=0, highlightthickness=5,
+                                    command=lambda: [self.frame.destroy(), self.info_button.destroy(), Menu()])
+        self.button_return.grid(row=0)
 
 
 #######################################################################################################################
