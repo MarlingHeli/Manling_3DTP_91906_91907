@@ -72,6 +72,9 @@ class Menu:  # menu screen that also error checks input
         self.error_label = Label(self.error_frame, text="", font=font, fg="red", bg=bg)
         self.error_label.grid(row=1)
 
+        # add loading label
+        self.loading_label = Label(self.error_frame, text="Loading...", font=font, bg=bg)
+
     def get_directory(self, url, year):  # get contents of 3.7B folder from github directory
         # send request to get api url
         response = requests.get(url)
@@ -89,6 +92,8 @@ class Menu:  # menu screen that also error checks input
             folder = f"WakaNats{year}"
 
             if folder in folder_dict:
+                self.loading_label.grid(row=1)
+                self.frame.update()
                 folder_url = folder_dict[folder]
                 Ranker(folder_url, year)
                 # hide menu elements for ranking calculator screen
@@ -124,29 +129,30 @@ class Ranker:  # ranking calculator screen that calculates points
         self.ranker_heading = Label(self.frame,
                                     text=f"Ranking Calculator - {year}",
                                     font=("Arial", "22", "bold"), bg=bg)
-        self.ranker_heading.grid(row=0, pady=(35, 5))
+        self.ranker_heading.grid(row=0, pady=(35, 0))
 
         self.ranker_description = Label(self.frame,
                                         text="Below is a preview of the rankings. To download the file "
                                              "as a .csv file, click 'Export to csv'.",
                                         font=("Arial", "12"),
                                         wrap=530, width=80, justify="left", bg=bg)
-        self.ranker_description.grid(row=1, pady=(5, 3))
+        self.ranker_description.grid(row=1, pady=5)
 
-        self.window_frame = Frame()
-        self.window_frame.grid()
+        # canvas is better for scrolling elements
+        self.window_canvas = Canvas(self.frame)
+        self.window_canvas.grid(row=3)
 
         # create scroll bar
-        self.scrollbar = Scrollbar(self.window_frame)
-        self.scrollbar.grid(row=1, column=2)
+        self.scrollbar = Scrollbar(self.window_canvas)
+        self.scrollbar.grid(row=3, column=2, sticky="nsew")
 
         # create results list
-        self.results = Listbox(self.window_frame, bg="white", width=60, height=10,
+        self.results = Listbox(self.window_canvas, bg="white", width=60, height=12,
                                font=font, yscrollcommand=self.scrollbar.set)
 
         # give buttons their own grid
         self.ranker_buttons = Frame(bg=bg)
-        self.ranker_buttons.grid(pady=(30, 10))
+        self.ranker_buttons.grid(pady=(25, 10))
 
         # give buttons a consistent black border
         self.button_csv_border = Frame(self.ranker_buttons, highlightbackground="#000000",
@@ -165,7 +171,7 @@ class Ranker:  # ranking calculator screen that calculates points
         # return to menu
         self.button_return = Button(self.button_return_border, text="Return",
                                     font=font, bg="#C9FFDB", bd=0, highlightthickness=5,
-                                    command=lambda: [self.frame.destroy(), self.window_frame.destroy(),
+                                    command=lambda: [self.frame.destroy(), self.window_canvas.destroy(),
                                                      self.ranker_buttons.destroy(), Menu()])
         self.button_return.grid(row=1, column=2)
 
@@ -173,8 +179,8 @@ class Ranker:  # ranking calculator screen that calculates points
         self.error_frame.grid()
 
         # add error label
-        self.error_label = Label(self.window_frame, text="error", font=font, fg="red")
-        self.error_label.grid(row=1)
+        self.error_label = Label(self.error_frame, text="", font=font, fg="red", bg=bg)
+        self.error_label.grid(row=0)
 
         self.folder_reader(folder_url)
 
@@ -229,7 +235,7 @@ class Ranker:  # ranking calculator screen that calculates points
             # count number of files
             label_files = Label(self.frame, text=f"Number of files: {len(contents)}", font=font,
                                 bg=bg)
-            label_files.grid(row=2)
+            label_files.grid(row=2, pady=(3, 15))
 
             final_files = []
             for file in contents:
@@ -252,7 +258,7 @@ class Ranker:  # ranking calculator screen that calculates points
                 index += 1
 
             # display results list
-            self.results.grid(row=1, column=1)
+            self.results.grid(row=3, column=1)
             self.scrollbar.config(command=self.results.yview)
 
         else:
