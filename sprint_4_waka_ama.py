@@ -1,14 +1,17 @@
-import tkinter
 import tkinter.messagebox
 from tkinter import *
 import requests
 from concurrent.futures import ThreadPoolExecutor
 from tkinter import filedialog
 from pathlib import Path
+from io import BytesIO
+from PIL import Image, ImageTk
 import webbrowser
+
 
 # use GitHub repo for directory
 api_url = "https://api.github.com/repos/MarlingHeli/Manling_3DTP_91906_91907/contents/Waka Ama data/3.7B resource files"
+img_url = "https://raw.githubusercontent.com/MarlingHeli/Manling_3DTP_91906_91907/a1cf182892fb46231a34290740f6c26fd489c216/boating-220066_1280.jpg"
 
 ranking_dict = {}
 folder_dict = {}
@@ -26,6 +29,8 @@ class Menu:
         # create frames
         self.frame = Frame(bg=bg)
         self.frame.grid()
+        self.image_canvas = Canvas(self.frame, width=550, height=235, bg=bg)
+        self.image_canvas.grid(row=2)
         self.button_frame = Frame(bg=bg)
         self.button_frame.grid()
         self.error_frame = Frame()
@@ -33,13 +38,30 @@ class Menu:
 
         # add text
         self.menu_heading = Label(self.frame, text="Waka Ama ranking finder", font=("Arial", "22", "bold"), bg=bg)
-        self.menu_heading.grid(row=0, pady=(60, 10))
+        self.menu_heading.grid(row=0, pady=(40, 0))
 
         self.menu_desc = Label(self.frame,
                                text="Welcome to the unofficial Waka Ama ranking finder! Use this program to "
                                     "check the results of a previous competition by year.", font=("Arial", "12"),
-                               wrap=530, width=80, justify="left", bg=bg)
+                               wrap=530, width=80, justify="left", bg=bg, pady=15)
         self.menu_desc.grid(row=1)
+
+        # add image
+        response = requests.get(img_url)
+        # check if request was successful
+        if response.status_code == 200:
+            image_data = BytesIO(response.content)
+            # open image from image data
+            pil_image = Image.open(image_data)
+            # resize the image to canvas size
+            pil_image = pil_image.resize((550, 235))
+            self.photo = ImageTk.PhotoImage(pil_image)
+            # display image
+            self.image_canvas.create_image(0, 0, anchor="nw", image=self.photo)
+
+        else:
+            img_label = Label(self.image_canvas, text="Failed to load image :(", bg=bg, font=font, fg="red")
+            img_label.grid(pady=105, padx=190)
 
         # add entry field for years
         self.year_var = StringVar()
@@ -47,19 +69,19 @@ class Menu:
         self.year_label = Label(self.button_frame, text="Enter year:", font=("Arial", "12"), bg=bg)
         self.year_entry = Entry(self.button_frame, textvariable=self.year_var, font=("Arial", "20"),
                                 width=5, bg=bg, highlightbackground="#000000", highlightthickness=1)
-        self.year_label.grid(row=1, column=1, pady=(230, 10))
-        self.year_entry.grid(row=1, column=2, pady=(230, 10))
+        self.year_label.grid(row=1, column=1, pady=(20, 10))
+        self.year_entry.grid(row=1, column=2, pady=(20, 10))
 
         # give buttons a consistent black border
         self.find_border = Frame(self.button_frame, highlightbackground="#000000", highlightthickness=1, bd=1)
-        self.find_border.grid(row=1, column=3, pady=(230, 10))
+        self.find_border.grid(row=1, column=3, pady=(20, 10))
 
         self.help_border = Frame(self.button_frame, highlightbackground="#000000", highlightthickness=1, bd=1)
-        self.help_border.grid(row=1, column=4, pady=(230, 10), padx=50)
+        self.help_border.grid(row=1, column=4, pady=(20, 10), padx=50)
 
         # create buttons
         self.button_find = Button(self.find_border, text="Find", font=font, bg="#C9FFDB", bd=0, highlightthickness=5,
-                                  command=self.year_check)
+                                  command=self.year_check,)
         self.button_find.grid(row=2, column=3)
 
         self.button_help = Button(self.help_border, text="Help/information", font=font, bg="#DAFFC7", bd=0,
@@ -331,7 +353,8 @@ class Info:
                  "\n10. Open your local repository folder (Ctrl + Shift + F).\n11. Copy paste/move " \
                  "in your year folder.\n12. Commit the change.\n13. Re-run this program." \
                  "\n\nClicking the 'Return' button takes you back to the Menu.\n\nTo close the program, " \
-                 "press the x at the top right of the window.\n\n Have fun! :)"
+                 "press the x at the top right of the window.\n\nHave fun! :)\n\nCover image by " \
+                 "PublicDomainPictures on Pixabay."
 
         # text widget for multiline text
         self.info_window = Text(self.frame, font=font, width=60, height=15, bg=bg, wrap=WORD, padx=20, pady=20)
