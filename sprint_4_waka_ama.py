@@ -28,6 +28,7 @@ bg = "#FAFFFD"
 outline_clr = "#284A29"
 click_clr = "#DAFFC7"
 
+
 #######################################################################################################################
 # menu screen that also error checks input
 class Menu:
@@ -37,10 +38,10 @@ class Menu:
         self.frame.grid()
         self.image_canvas = Canvas(self.frame, width=550, height=235, bg=bg)
         self.image_canvas.grid(row=2)
-        self.button_frame = Frame(bg=bg)
-        self.button_frame.grid()
         self.error_frame = Frame(bg=bg)
-        self.error_frame.grid()
+        self.error_frame.grid(pady=(8, 0))
+        self.button_frame = Frame(bg=bg)
+        self.button_frame.grid(pady=(8, 10))
 
         # add text
         self.menu_heading = Label(self.frame, text="Waka Ama ranking finder", font=heading_font, bg=bg,
@@ -67,7 +68,7 @@ class Menu:
             self.image_canvas.create_image(0, 0, anchor="nw", image=self.photo)
         else:
             img_label = Label(self.image_canvas, text="Failed to load image :(", bg=bg, font=font, fg="red")
-            img_label.grid(pady=105, padx=190)
+            img_label.grid(pady=15, padx=10)
 
         # add entry field for years
         self.year_var = StringVar()
@@ -75,30 +76,32 @@ class Menu:
         self.year_label = Label(self.button_frame, text="Enter year:", font=font, bg=bg, fg=text_fg)
         self.year_entry = Entry(self.button_frame, textvariable=self.year_var, font=("Yu Gothic UI Semibold", "21"),
                                 fg=text_fg, width=5, bg=bg, highlightbackground=outline_clr, highlightthickness=1)
-        self.year_label.grid(row=1, column=1, pady=(20, 10))
-        self.year_entry.grid(row=1, column=2, pady=(20, 10))
+        self.year_label.grid(row=0, column=0)
+        self.year_entry.grid(row=0, column=1)
 
         # give buttons a consistent black border
         self.find_border = Frame(self.button_frame, highlightbackground=outline_clr, highlightthickness=1, bd=1)
-        self.find_border.grid(row=1, column=3, pady=(20, 10))
+        self.find_border.grid(row=0, column=2)
 
         self.help_border = Frame(self.button_frame, highlightbackground=outline_clr, highlightthickness=1, bd=1)
-        self.help_border.grid(row=1, column=4, pady=(20, 10), padx=50)
+        self.help_border.grid(row=0, column=3, padx=50)
 
         # create buttons
         self.button_find = Button(self.find_border, text="Find", font=font, bg="#BAFFD3", bd=0, highlightthickness=5,
-                                  command=self.year_check, fg=text_fg, activebackground=click_clr)
-        self.button_find.grid(row=2, column=3)
+                                  command=self.year_check, fg=text_fg, activebackground=click_clr,
+                                  activeforeground=text_fg)
+
+        self.button_find.grid(row=1, column=2)
 
         self.button_help = Button(self.help_border, text="Help/information", font=font, bg="#C9FFDB", bd=0,
                                   highlightthickness=5, fg=text_fg, activebackground=click_clr,
                                   command=lambda: [self.frame.destroy(), self.button_frame.destroy(),
-                                                   self.error_frame.destroy(), Info()])
-        self.button_help.grid(row=2, column=4)
+                                                   self.error_frame.destroy(), Info()], activeforeground=text_fg)
+        self.button_help.grid(row=1, column=3)
 
         # add error label
         self.error_label = Label(self.error_frame, text="", font=font, fg="red", bg=bg)
-        self.error_label.grid(row=1)
+        self.error_label.grid(row=0)
 
         # add loading label
         self.loading_label = Label(self.error_frame, text="Loading...", font=font, bg=bg, fg=text_fg)
@@ -121,7 +124,7 @@ class Menu:
             folder = f"WakaNats{year}"
 
             if folder in folder_dict:
-                self.loading_label.grid(row=1)
+                self.loading_label.grid(row=0)
                 self.frame.update()
                 folder_url = folder_dict[folder]
                 # hide menu elements for ranking calculator screen
@@ -180,7 +183,7 @@ class Ranker:
 
         # create scroll bar
         self.scrollbar = Scrollbar(self.window_canvas, width=21)
-        self.scrollbar.grid(row=3, column=2, sticky="nsew")
+        self.scrollbar.grid(row=3, column=1, sticky="nsew")
 
         # create results list
         self.results = Listbox(self.window_canvas, bg="white", width=60, height=11, font=font,
@@ -188,22 +191,23 @@ class Ranker:
 
         # give buttons a consistent black border
         self.csv_border = Frame(self.button_frame, highlightbackground=outline_clr, highlightthickness=1, bd=1)
-        self.csv_border.grid(row=1, column=1, padx=50)
+        self.csv_border.grid(row=0, column=0, padx=50)
 
         self.return_border = Frame(self.button_frame, highlightbackground=outline_clr, highlightthickness=1, bd=1)
-        self.return_border.grid(row=1, column=2, padx=50)
+        self.return_border.grid(row=0, column=1, padx=50)
 
         # create buttons
         self.button_csv = Button(self.csv_border, text="Export to csv", font=font, bg="#BAFFD3", bd=0,
-                                 highlightthickness=5,  activebackground=click_clr,
+                                 highlightthickness=5, activebackground=click_clr, activeforeground=text_fg,
                                  command=lambda: self.export_csv(year), fg=text_fg)
-        self.button_csv.grid(row=1, column=1)
+        self.button_csv.grid(row=0, column=0)
         # return to menu
         self.button_return = Button(self.return_border, text="Return", fg=text_fg,
                                     font=font, bg="#C9FFDB", bd=0, highlightthickness=5, activebackground=click_clr,
+                                    activeforeground=text_fg,
                                     command=lambda: [self.frame.destroy(), self.window_canvas.destroy(),
                                                      self.button_frame.destroy(), self.error_frame.destroy(), Menu()])
-        self.button_return.grid(row=1, column=2)
+        self.button_return.grid(row=0, column=1)
 
         # add error label
         self.error_label = Label(self.error_frame, text="", font=font, fg="red", bg=bg)
@@ -265,7 +269,7 @@ class Ranker:
             index += 1
 
         # display results list
-        self.results.grid(row=3, column=1)
+        self.results.grid(row=3, column=0)
         self.scrollbar.config(command=self.results.yview)
 
     # filters for and gets number of final files
@@ -364,7 +368,7 @@ class Info:
                  "PublicDomainPictures on Pixabay."
         # add scrollbar
         self.scrollbar = Scrollbar(self.frame, width=21)
-        self.scrollbar.grid(row=1, column=2, sticky="nsew")
+        self.scrollbar.grid(row=1, column=1, sticky="nsew")
 
         # text widget for multiline text
         self.info_window = Text(self.frame, font=font, width=60, height=13, bg=bg, wrap=WORD, padx=20, pady=20,
@@ -389,11 +393,12 @@ class Info:
 
         # add border for button
         self.return_border = Frame(self.button_frame, highlightbackground=outline_clr, highlightthickness=1, bd=1)
-        self.return_border.grid(row=1, column=2, pady=(20, 10))
+        self.return_border.grid(row=0, pady=(20, 10))
 
         # create button
         self.button_return = Button(self.return_border, text="Return", font=font, bg="#BAFFD3", bd=0,
                                     highlightthickness=5, fg=text_fg, activebackground=click_clr,
+                                    activeforeground=text_fg,
                                     command=lambda: [self.frame.destroy(), self.button_frame.destroy(), Menu()])
         self.button_return.grid(row=0)
 
