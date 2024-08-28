@@ -24,9 +24,9 @@ font = ("Yu Gothic UI Semibold", "12")
 text_fg = "#284A29"
 # background colour
 bg = "#FAFFFD"
-# button outline colour
+# button colours
 outline_clr = "#284A29"
-
+click_clr = "#DAFFC7"
 
 #######################################################################################################################
 # menu screen that also error checks input
@@ -45,12 +45,12 @@ class Menu:
         # add text
         self.menu_heading = Label(self.frame, text="Waka Ama ranking finder", font=heading_font, bg=bg,
                                   fg=heading_fg)
-        self.menu_heading.grid(row=0, pady=(40, 0))
+        self.menu_heading.grid(row=0, pady=(30, 0))
 
         self.menu_desc = Label(self.frame,
                                text="Welcome to the unofficial Waka Ama ranking finder! Use this program to "
                                     "check the results of a previous competition by year.", font=font,
-                               wrap=530, width=80, justify="left", bg=bg, pady=15, fg=text_fg)
+                               wrap=530, width=80, justify="left", bg=bg, pady=10, fg=text_fg)
         self.menu_desc.grid(row=1)
 
         # add image
@@ -86,12 +86,12 @@ class Menu:
         self.help_border.grid(row=1, column=4, pady=(20, 10), padx=50)
 
         # create buttons
-        self.button_find = Button(self.find_border, text="Find", font=font, bg="#C9FFDB", bd=0, highlightthickness=5,
-                                  command=self.year_check, fg=text_fg)
+        self.button_find = Button(self.find_border, text="Find", font=font, bg="#BAFFD3", bd=0, highlightthickness=5,
+                                  command=self.year_check, fg=text_fg, activebackground=click_clr)
         self.button_find.grid(row=2, column=3)
 
-        self.button_help = Button(self.help_border, text="Help/information", font=font, bg="#DAFFC7", bd=0,
-                                  highlightthickness=5, fg=text_fg,
+        self.button_help = Button(self.help_border, text="Help/information", font=font, bg="#C9FFDB", bd=0,
+                                  highlightthickness=5, fg=text_fg, activebackground=click_clr,
                                   command=lambda: [self.frame.destroy(), self.button_frame.destroy(),
                                                    self.error_frame.destroy(), Info()])
         self.button_help.grid(row=2, column=4)
@@ -163,14 +163,14 @@ class Ranker:
         self.window_canvas = Canvas(self.frame)
         self.window_canvas.grid(row=3)
         self.button_frame = Frame(bg=bg)
-        self.button_frame.grid(pady=(25, 10))
+        self.button_frame.grid(pady=(20, 10))
         self.error_frame = Frame(bg=bg)
         self.error_frame.grid()
 
         # add text
         self.ranker_heading = Label(self.frame, text=f"Ranking Calculator - {year}", font=heading_font,
                                     bg=bg, fg=heading_fg)
-        self.ranker_heading.grid(row=0, pady=(35, 0))
+        self.ranker_heading.grid(row=0, pady=(20, 0))
 
         self.ranker_desc = Label(self.frame,
                                  text="Below is a preview of the rankings. To download the file as a .csv file,"
@@ -183,7 +183,7 @@ class Ranker:
         self.scrollbar.grid(row=3, column=2, sticky="nsew")
 
         # create results list
-        self.results = Listbox(self.window_canvas, bg="white", width=60, height=12, font=font,
+        self.results = Listbox(self.window_canvas, bg="white", width=60, height=11, font=font,
                                yscrollcommand=self.scrollbar.set, fg=text_fg)
 
         # give buttons a consistent black border
@@ -195,11 +195,12 @@ class Ranker:
 
         # create buttons
         self.button_csv = Button(self.csv_border, text="Export to csv", font=font, bg="#BAFFD3", bd=0,
-                                 highlightthickness=5, command=lambda: self.export_csv(year), fg=text_fg)
+                                 highlightthickness=5,  activebackground=click_clr,
+                                 command=lambda: self.export_csv(year), fg=text_fg)
         self.button_csv.grid(row=1, column=1)
         # return to menu
         self.button_return = Button(self.return_border, text="Return", fg=text_fg,
-                                    font=font, bg="#C9FFDB", bd=0, highlightthickness=5,
+                                    font=font, bg="#C9FFDB", bd=0, highlightthickness=5, activebackground=click_clr,
                                     command=lambda: [self.frame.destroy(), self.window_canvas.destroy(),
                                                      self.button_frame.destroy(), self.error_frame.destroy(), Menu()])
         self.button_return.grid(row=1, column=2)
@@ -277,7 +278,7 @@ class Ranker:
 
             # count number of files
             label_files = Label(self.frame, text=f"Number of files: {len(contents)}", font=font, bg=bg, fg=text_fg)
-            label_files.grid(row=2, pady=(3, 15))
+            label_files.grid(row=2, pady=(0, 10))
 
             final_files = []
             for file in contents:
@@ -328,7 +329,7 @@ class Info:
 
         # add text
         self.info_heading = Label(self.frame, text="Help/Information", font=heading_font, bg=bg, fg=heading_fg)
-        self.info_heading.grid(row=0, pady=(40, 15))
+        self.info_heading.grid(row=0, pady=(30, 15))
 
         info_1 = "This program reads Waka Ama's competition data, calculates the total points earned by each " \
                  "association, and ranks them. Since this program sources the data from GitHub (online), factors " \
@@ -366,7 +367,7 @@ class Info:
         self.scrollbar.grid(row=1, column=2, sticky="nsew")
 
         # text widget for multiline text
-        self.info_window = Text(self.frame, font=font, width=60, height=15, bg=bg, wrap=WORD, padx=20, pady=20,
+        self.info_window = Text(self.frame, font=font, width=60, height=13, bg=bg, wrap=WORD, padx=20, pady=20,
                                 yscrollcommand=self.scrollbar.set, fg=text_fg)
         self.info_window.grid(row=1)
 
@@ -392,7 +393,7 @@ class Info:
 
         # create button
         self.button_return = Button(self.return_border, text="Return", font=font, bg="#BAFFD3", bd=0,
-                                    highlightthickness=5, fg=text_fg,
+                                    highlightthickness=5, fg=text_fg, activebackground=click_clr,
                                     command=lambda: [self.frame.destroy(), self.button_frame.destroy(), Menu()])
         self.button_return.grid(row=0)
 
