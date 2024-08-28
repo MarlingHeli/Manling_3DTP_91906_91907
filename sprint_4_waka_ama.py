@@ -269,7 +269,6 @@ class Ranker:
 
     # download results as csv file
     def export_csv(self, year):
-        count = 1
         try:
             # get user's download path
             downloads = str(Path.home() / "Downloads")
@@ -304,16 +303,35 @@ class Info:
         self.info_heading.grid(row=0, pady=(40, 15))
 
         info_1 = "This program reads Waka Ama's competition data, calculates the total points earned by each " \
-                 "association, and ranks them. Since this program sources the data from GitHub (online), factors like " \
-                 "the network, data size, server response time, etc., can influence how quickly the program processes " \
-                 "files.\n\nHow to use the program:\nAt the Menu screen, type in the year that you want the program to" \
-                 " analyse. The earliest year is 2017 and latest year is 2030. The program will check whether that year" \
-                 " exists as a folder, then produces the results. You will have the option to download the results as a" \
-                 " .csv file. The .csv file downloaded will be named WakaAmaRanking{year}, where {year} is the year that" \
-                 " you selected.\n\nAdding your own data:\nTo add your year folder, go to this repository on GitHub:\n" \
+                 "association, and ranks them. Since this program sources the data from GitHub (online), factors " \
+                 "like the network, data size, server response time, etc., can influence how quickly the program " \
+                 "processes files.\n\n" \
+                 "How to use the program:\nAt the Menu screen, type in the year that you want " \
+                 "the program to analyse. The earliest year is 2017 and latest year is 2030. The program will check " \
+                 "whether that year exists as a folder, then produces the results. You will have the option to " \
+                 "download the results as a .csv file. The .csv file downloaded will be named WakaAmaRanking{year}," \
+                 " where {year} is the year that you selected." \
+                 "\n\nAdding your own data:\nTo add your year folder," \
+                 " go to this repository on GitHub:\n" \
 
-        info_2 = "\n\nClicking the 'Return' button takes you back to the Menu.\n\nTo close the program, " \
-                 "press the x at the top right of the window."
+        info_2 = "\nYou will have to fork the repository. If your folder has over 100 files, GitHub online " \
+                 "will not be able to process it from its size. You could try uploading the files in batches. " \
+                 "Otherwise, you will have to download GitHub desktop and possibly Git Large File Storage.\n\n" \
+                 "Rules:\nPlease name your year folder 'WakaNats{year}' (without quotations and curly brackets), " \
+                 "where year is the year of your folder. Example: WakaNats2019. If you do not follow this format, " \
+                 "the program will not detect your folder. Similarly, files of the final games must have 'Final'" \
+                 " in its title or else the program will not find it. Please do not store folders inside the " \
+                 "year folder. Make sure your year folder is unzipped." \
+                 "\n\nFork using GitHub desktop:\n1. On GitHub online, go to the repository linked " \
+                 "above.\n2. In the top right, click the fork button.\n3. Name and copy the link of your forked" \
+                 " repository.\n4. Go to GitHub Desktop.\n5. Go to 'File'." \
+                 "\n6. Click 'Clone Repository.'\n7. At URL, paste in your forked GitHub link.\n8. Pick where to " \
+                 "save your repository.\n9.GitHub will ask you to contribute to the original" \
+                 " repository or your own.\n    Pick your own repository if you do not want to affect the original." \
+                 "\n10. Open your local repository folder (Ctrl + Shift + F).\n11. Copy paste/move " \
+                 "in your year folder.\n12. Commit the change.\n13. Re-run this program." \
+                 "\n\nClicking the 'Return' button takes you back to the Menu.\n\nTo close the program, " \
+                 "press the x at the top right of the window.\n\n Have fun! :)"
 
         # text widget for multiline text
         self.info_window = Text(self.frame, font=font, width=60, height=15, bg=bg, wrap=WORD, padx=20, pady=20)
@@ -321,8 +339,9 @@ class Info:
 
         # create link that will go in the text box
         self.link = Label(self.info_window, text="https://github.com/MarlingHeli/Manling_3DTP_91906_91907.git",
-                          font=font+("underline",), cursor="hand2", fg="green", bg=bg)
-        self.link.bind("<Button-1>", lambda e: self.callback("https://github.com/MarlingHeli/Manling_3DTP_91906_91907.git"))
+                          font=font + ("underline",), cursor="hand2", fg="green", bg=bg)
+        self.link.bind("<Button-1>", lambda e: self.callback("https://github.com/MarlingHeli/Manling_3DTP_91906_91907"
+                                                             ".git"))
 
         # put text into textbox
         self.info_window.insert(tkinter.END, info_1)
@@ -349,6 +368,7 @@ class Info:
 
     def callback(self, url):
         webbrowser.open_new_tab(url)
+
 
 #######################################################################################################################
 
