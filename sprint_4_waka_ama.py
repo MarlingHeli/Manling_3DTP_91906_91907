@@ -416,5 +416,6 @@ if __name__ == "__main__":
     window.configure(bg=bg)
     # run Menu class first
     Menu()
+    window.resizable(False, False)
     # keep window on screen
     window.mainloop()
