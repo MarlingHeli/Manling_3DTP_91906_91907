@@ -404,7 +404,7 @@ class Info:
         self.scrollbar.grid(row=1, column=1, sticky="nsew")
 
         # text widget for multiline text
-        self.info_window = Text(self.frame, font=font, width=60, height=13, bg=bg, wrap=WORD, padx=20, pady=20,
+        self.info_window = Text(self.frame, font=font, width=60, height=13, bg="white", wrap=WORD, padx=20, pady=20,
                                 yscrollcommand=self.scrollbar.set, fg=text_fg)
         self.info_window.grid(row=1, sticky="nsew")
 
@@ -447,6 +447,7 @@ if __name__ == "__main__":
     window.title("Waka Ama ranking finder")
     # set window size
     window.geometry("700x500")
+    # set minimum window size
     window.minsize(750, 550)
     # change window background colour
     window.configure(bg=bg)
