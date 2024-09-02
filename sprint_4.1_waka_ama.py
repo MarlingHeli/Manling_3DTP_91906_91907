@@ -8,11 +8,14 @@ from tkinter import *  # use for tkinter widgets for GUI
 from tkinter import filedialog  # used to open file explorer to save csv file
 from PIL import Image, ImageTk  # used to add image
 
+# use token to send more requests to server
+token = ""
 
 # use GitHub repo for directory
 api_url = "https://api.github.com/repos/MarlingHeli/Manling_3DTP_91906_91907/contents/Waka Ama data/3.7B resource files"
 img_url = "https://raw.githubusercontent.com/MarlingHeli/Manling_3DTP_91906_91907" \
           "/a1cf182892fb46231a34290740f6c26fd489c216/boating-220066_1280.jpg"
+headers = {"Authorization": f"Bearer {token}"}
 
 ranking_dict = {}
 folder_dict = {}
@@ -40,19 +43,11 @@ class Menu:
         self.frame.rowconfigure(2, weight=1)
         self.frame.columnconfigure(0, weight=1)
 
-        #self.image_canvas = Canvas(self.frame, width=550, height=235, bg=bg)
-        #self.image_canvas.grid(row=2, column=0, sticky="nsew")
-
         self.error_frame = Frame(bg=bg)
-        self.error_frame.grid(row=3, column=0, pady=(8, 0), sticky="nsew")
-        self.error_frame.rowconfigure(0, weight=1)
-        self.error_frame.columnconfigure(0, weight=1)
+        self.error_frame.grid(row=3, column=0, pady=(5, 0))
 
         self.button_frame = Frame(bg=bg)
-        self.button_frame.grid(row=4, column=0, pady=(8, 10), sticky="nsew")
-        self.button_frame.rowconfigure(3, weight=1)
-        self.button_frame.columnconfigure(3, weight=1)
-        self.button_frame.columnconfigure(0, weight=1)
+        self.button_frame.grid(row=4, column=0, pady=(5, 25))
 
         # add text
         self.menu_heading = Label(self.frame, text="Waka Ama ranking finder", font=heading_font, bg=bg,
@@ -66,7 +61,7 @@ class Menu:
         self.menu_desc.grid(row=1)
 
         # add image
-        response = requests.get(img_url)
+        response = requests.get(img_url, headers=headers)
         # check if request was successful
         if response.status_code == 200:
             # open image from image data
@@ -79,11 +74,10 @@ class Menu:
 
             # store image in a label
             self.img_bg = Label(self.frame, image=self.img)
-            self.img_bg.grid(sticky="nsew")
+            self.img_bg.grid(sticky="nsew", padx=50)
 
             # run resize_img method
             self.img_bg.bind("<Configure>", self.resize_img)
-
         else:
             img_label = Label(self.frame, text="Failed to load image :(", bg=bg, font=font, fg="red")
             img_label.grid(pady=15, padx=10)
@@ -141,7 +135,7 @@ class Menu:
         # get contents of 3.7B folder from GitHub directory
     def get_directory(self, url, year):
         # send request to get api url
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         # 200 is the standard code for a successful http request sent by server
         if response.status_code == 200:
             # grab all the information about files in the 3.7B folder (as dictionaries in list)
@@ -195,23 +189,14 @@ class Ranker:
         self.frame = Frame(bg=bg)
         self.frame.grid(sticky="nsew")
         self.frame.rowconfigure(3, weight=1)
-        self.frame.columnconfigure(3, weight=1)
-
-        # canvas is better for scrolling elements
-        self.window_canvas = Canvas(self.frame)
-        self.window_canvas.grid(row=3, sticky="nsew")
-
-        self.button_frame = Frame(bg=bg)
-        self.button_frame.grid(pady=(20, 10), sticky="nsew")
-        self.frame.rowconfigure(0, weight=1)
         self.frame.columnconfigure(0, weight=1)
-        self.frame.rowconfigure(1, weight=1)
-        self.frame.columnconfigure(1, weight=1)
 
         self.error_frame = Frame(bg=bg)
-        self.error_frame.grid(sticky="nsew")
-        self.frame.rowconfigure(0, weight=1)
-        self.frame.columnconfigure(0, weight=1)
+        self.error_frame.grid(pady=(0, 5))
+
+        self.button_frame = Frame(bg=bg)
+        self.button_frame.grid(pady=(5, 25))
+
 
         # add text
         self.ranker_heading = Label(self.frame, text=f"Ranking Calculator - {year}", font=heading_font,
@@ -225,11 +210,11 @@ class Ranker:
         self.ranker_desc.grid(row=1, pady=5)
 
         # create scroll bar
-        self.scrollbar = Scrollbar(self.window_canvas, width=21)
-        self.scrollbar.grid(row=3, column=1, sticky="nsew")
+        self.scrollbar = Scrollbar(self.frame, width=21)
+        self.scrollbar.grid(row=3, column=1, sticky="ns", padx=(0, 50))
 
         # create results list
-        self.results = Listbox(self.window_canvas, bg="white", width=60, height=11, font=font,
+        self.results = Listbox(self.frame, bg="white", width=60, height=11, font=font,
                                yscrollcommand=self.scrollbar.set, fg=text_fg)
 
         # give buttons a consistent black border
@@ -248,8 +233,8 @@ class Ranker:
         self.button_return = Button(self.return_border, text="Return", fg=text_fg,
                                     font=font, bg="#C9FFDB", bd=0, highlightthickness=5, activebackground=click_clr,
                                     activeforeground=text_fg,
-                                    command=lambda: [self.frame.destroy(), self.window_canvas.destroy(),
-                                                     self.button_frame.destroy(), self.error_frame.destroy(), Menu()])
+                                    command=lambda: [self.frame.destroy(), self.button_frame.destroy(),
+                                                     self.error_frame.destroy(), Menu()])
         self.button_return.grid(row=0, column=1)
 
         # add error label
@@ -288,7 +273,7 @@ class Ranker:
 
     # filters for place number and regional name
     def file_reader(self, file_url):
-        response = requests.get(file_url)
+        response = requests.get(file_url, headers=headers)
         if response.status_code == 200:
             contents = response.text.strip().split("\n")
             # skip the first line
@@ -312,12 +297,12 @@ class Ranker:
             index += 1
 
         # display results list
-        self.results.grid(row=3, column=0)
+        self.results.grid(row=3, column=0, sticky="nsew", padx=(50, 0))
         self.scrollbar.config(command=self.results.yview)
 
     # filters for and gets number of final files
     def folder_reader(self, year_url):
-        response = requests.get(year_url)
+        response = requests.get(year_url, headers=headers)
         # if response successfully gets url for year folder
         if response.status_code == 200:
             # get contents of year folder
@@ -375,7 +360,7 @@ class Info:
         self.frame.columnconfigure(0, weight=1)
 
         self.button_frame = Frame(bg=bg)
-        self.button_frame.grid(sticky="nsew")
+        self.button_frame.grid(sticky="nsew", pady=(5, 10))
         self.button_frame.rowconfigure(0, weight=1)
         self.button_frame.columnconfigure(0, weight=1)
 
@@ -463,7 +448,9 @@ if __name__ == "__main__":
     # set window size
     window.geometry("700x500")
     window.minsize(750, 550)
+    # change window background colour
     window.configure(bg=bg)
+    # let window adjust size
     window.columnconfigure(0, weight=1)
     window.rowconfigure(0, weight=1)
     # run Menu class first
