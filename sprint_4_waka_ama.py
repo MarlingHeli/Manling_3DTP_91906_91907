@@ -1,17 +1,21 @@
-import requests
-import tkinter.messagebox
-import webbrowser
-from concurrent.futures import ThreadPoolExecutor
-from io import BytesIO
-from pathlib import Path
-from tkinter import *
-from tkinter import filedialog
-from PIL import Image, ImageTk
+import requests  # send requests to GitHub server to retrieve data
+import tkinter.messagebox  # create messagebox for error window
+import webbrowser  # take users to the web via hyperlink
+from concurrent.futures import ThreadPoolExecutor  # run multiple methods at the same time to speed up processing data
+from io import BytesIO  # use to add image
+from pathlib import Path  # use to find user's local download directory
+from tkinter import *  # use for tkinter widgets for GUI
+from tkinter import filedialog  # used to open file explorer to save csv file
+from PIL import Image, ImageTk  # used to add image
+
+# use token to send more requests to server
+token = ""
 
 # use GitHub repo for directory
 api_url = "https://api.github.com/repos/MarlingHeli/Manling_3DTP_91906_91907/contents/Waka Ama data/3.7B resource files"
 img_url = "https://raw.githubusercontent.com/MarlingHeli/Manling_3DTP_91906_91907" \
           "/a1cf182892fb46231a34290740f6c26fd489c216/boating-220066_1280.jpg"
+headers = {"Authorization": f"Bearer {token}"}
 
 ranking_dict = {}
 folder_dict = {}
@@ -35,13 +39,15 @@ class Menu:
     def __init__(self):
         # create frames
         self.frame = Frame(bg=bg)
-        self.frame.grid()
-        self.image_canvas = Canvas(self.frame, width=550, height=235, bg=bg)
-        self.image_canvas.grid(row=2)
+        self.frame.grid(sticky="nsew")
+        self.frame.rowconfigure(2, weight=1)
+        self.frame.columnconfigure(0, weight=1)
+
         self.error_frame = Frame(bg=bg)
-        self.error_frame.grid(pady=(8, 0))
+        self.error_frame.grid(row=3, column=0, pady=(5, 0))
+
         self.button_frame = Frame(bg=bg)
-        self.button_frame.grid(pady=(8, 10))
+        self.button_frame.grid(row=4, column=0, pady=(5, 25))
 
         # add text
         self.menu_heading = Label(self.frame, text="Waka Ama ranking finder", font=heading_font, bg=bg,
@@ -55,19 +61,25 @@ class Menu:
         self.menu_desc.grid(row=1)
 
         # add image
-        response = requests.get(img_url)
+        response = requests.get(img_url, headers=headers)
         # check if request was successful
         if response.status_code == 200:
-            image_data = BytesIO(response.content)
             # open image from image data
-            pil_image = Image.open(image_data)
-            # resize the image to canvas size
-            pil_image = pil_image.resize((550, 235))
-            self.photo = ImageTk.PhotoImage(pil_image)
-            # display image
-            self.image_canvas.create_image(0, 0, anchor="nw", image=self.photo)
+            image_data = BytesIO(response.content)
+            # 0pen image from image data
+            self.image = Image.open(image_data)
+            # copy image which will be used as the new image size when users resize the window
+            self.image_copy = self.image.copy()
+            self.img = ImageTk.PhotoImage(self.image)
+
+            # store image in a label
+            self.img_bg = Label(self.frame, image=self.img)
+            self.img_bg.grid(sticky="nsew", padx=50)
+
+            # run resize_img method
+            self.img_bg.bind("<Configure>", self.resize_img)
         else:
-            img_label = Label(self.image_canvas, text="Failed to load image :(", bg=bg, font=font, fg="red")
+            img_label = Label(self.frame, text="Failed to load image :(", bg=bg, font=font, fg="red")
             img_label.grid(pady=15, padx=10)
 
         # add entry field for years
@@ -106,10 +118,24 @@ class Menu:
         # add loading label
         self.loading_label = Label(self.error_frame, text="Loading...", font=font, bg=bg, fg=text_fg)
 
-    # get contents of 3.7B folder from GitHub directory
+    # resize image based on window size
+    def resize_img(self, event):
+        # get new width and height of window
+        new_width = event.width
+        new_height = event.height
+
+        # resize duplicate image to screen size
+        self.image = self.image_copy.resize((new_width, new_height))
+
+        self.img = ImageTk.PhotoImage(self.image)
+        # update image size
+        self.img_bg.configure(image=self.img)
+
+
+        # get contents of 3.7B folder from GitHub directory
     def get_directory(self, url, year):
         # send request to get api url
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         # 200 is the standard code for a successful http request sent by server
         if response.status_code == 200:
             # grab all the information about files in the 3.7B folder (as dictionaries in list)
@@ -161,14 +187,16 @@ class Ranker:
     def __init__(self, folder_url, year):
         # create frames
         self.frame = Frame(bg=bg)
-        self.frame.grid()
-        # canvas is better for scrolling elements
-        self.window_canvas = Canvas(self.frame)
-        self.window_canvas.grid(row=3)
-        self.button_frame = Frame(bg=bg)
-        self.button_frame.grid(pady=(20, 10))
+        self.frame.grid(sticky="nsew")
+        self.frame.rowconfigure(3, weight=1)
+        self.frame.columnconfigure(0, weight=1)
+
         self.error_frame = Frame(bg=bg)
-        self.error_frame.grid()
+        self.error_frame.grid(pady=(0, 5))
+
+        self.button_frame = Frame(bg=bg)
+        self.button_frame.grid(pady=(5, 25))
+
 
         # add text
         self.ranker_heading = Label(self.frame, text=f"Ranking Calculator - {year}", font=heading_font,
@@ -182,11 +210,11 @@ class Ranker:
         self.ranker_desc.grid(row=1, pady=5)
 
         # create scroll bar
-        self.scrollbar = Scrollbar(self.window_canvas, width=21)
-        self.scrollbar.grid(row=3, column=1, sticky="nsew")
+        self.scrollbar = Scrollbar(self.frame, width=21)
+        self.scrollbar.grid(row=3, column=1, sticky="ns", padx=(0, 50))
 
         # create results list
-        self.results = Listbox(self.window_canvas, bg="white", width=60, height=11, font=font,
+        self.results = Listbox(self.frame, bg="white", width=60, height=11, font=font,
                                yscrollcommand=self.scrollbar.set, fg=text_fg)
 
         # give buttons a consistent black border
@@ -205,8 +233,8 @@ class Ranker:
         self.button_return = Button(self.return_border, text="Return", fg=text_fg,
                                     font=font, bg="#C9FFDB", bd=0, highlightthickness=5, activebackground=click_clr,
                                     activeforeground=text_fg,
-                                    command=lambda: [self.frame.destroy(), self.window_canvas.destroy(),
-                                                     self.button_frame.destroy(), self.error_frame.destroy(), Menu()])
+                                    command=lambda: [self.frame.destroy(), self.button_frame.destroy(),
+                                                     self.error_frame.destroy(), Menu()])
         self.button_return.grid(row=0, column=1)
 
         # add error label
@@ -245,7 +273,7 @@ class Ranker:
 
     # filters for place number and regional name
     def file_reader(self, file_url):
-        response = requests.get(file_url)
+        response = requests.get(file_url, headers=headers)
         if response.status_code == 200:
             contents = response.text.strip().split("\n")
             # skip the first line
@@ -269,12 +297,12 @@ class Ranker:
             index += 1
 
         # display results list
-        self.results.grid(row=3, column=0)
+        self.results.grid(row=3, column=0, sticky="nsew", padx=(50, 0))
         self.scrollbar.config(command=self.results.yview)
 
     # filters for and gets number of final files
     def folder_reader(self, year_url):
-        response = requests.get(year_url)
+        response = requests.get(year_url, headers=headers)
         # if response successfully gets url for year folder
         if response.status_code == 200:
             # get contents of year folder
@@ -327,9 +355,14 @@ class Info:
     def __init__(self):
         # create frames
         self.frame = Frame(bg=bg, padx=50)
-        self.frame.grid()
+        self.frame.grid(sticky="nsew")
+        self.frame.rowconfigure(1, weight=1)
+        self.frame.columnconfigure(0, weight=1)
+
         self.button_frame = Frame(bg=bg)
-        self.button_frame.grid()
+        self.button_frame.grid(sticky="nsew", pady=(5, 10))
+        self.button_frame.rowconfigure(0, weight=1)
+        self.button_frame.columnconfigure(0, weight=1)
 
         # add text
         self.info_heading = Label(self.frame, text="Help/Information", font=heading_font, bg=bg, fg=heading_fg)
@@ -371,9 +404,9 @@ class Info:
         self.scrollbar.grid(row=1, column=1, sticky="nsew")
 
         # text widget for multiline text
-        self.info_window = Text(self.frame, font=font, width=60, height=13, bg=bg, wrap=WORD, padx=20, pady=20,
+        self.info_window = Text(self.frame, font=font, width=60, height=13, bg="white", wrap=WORD, padx=20, pady=20,
                                 yscrollcommand=self.scrollbar.set, fg=text_fg)
-        self.info_window.grid(row=1)
+        self.info_window.grid(row=1, sticky="nsew")
 
         # create link that will go in the text box
         self.link = Label(self.info_window, text="https://github.com/MarlingHeli/Manling_3DTP_91906_91907.git",
@@ -412,10 +445,16 @@ class Info:
 if __name__ == "__main__":
     window = Tk()
     window.title("Waka Ama ranking finder")
+    # set window size
     window.geometry("700x500")
+    # set minimum window size
+    window.minsize(750, 550)
+    # change window background colour
     window.configure(bg=bg)
+    # let window adjust size
+    window.columnconfigure(0, weight=1)
+    window.rowconfigure(0, weight=1)
     # run Menu class first
     Menu()
-    window.resizable(False, False)
     # keep window on screen
     window.mainloop()
