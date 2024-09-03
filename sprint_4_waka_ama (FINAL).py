@@ -1,7 +1,6 @@
 import requests  # send requests to GitHub server to retrieve data
 import tkinter.messagebox  # create messagebox for error window
 import webbrowser  # take users to the web via hyperlink
-from concurrent.futures import ThreadPoolExecutor  # run multiple methods at the same time to speed up processing data
 from io import BytesIO  # use to add image
 from pathlib import Path  # use to find user's local download directory
 from tkinter import *  # use for tkinter widgets for GUI
@@ -19,6 +18,7 @@ headers = {"Authorization": f"Bearer {token}"}
 
 ranking_dict = {}
 folder_dict = {}
+final_files_dict = {}
 
 # heading font
 heading_font = ("Yu Gothic UI", "22", "bold")
@@ -57,7 +57,7 @@ class Menu:
         self.menu_desc = Label(self.frame,
                                text="Welcome to the unofficial Waka Ama ranking finder! Use this program to "
                                     "check the results of a previous competition by year.", font=font,
-                               wrap=530, width=80, justify="left", bg=bg, pady=10, fg=text_fg)
+                               wrap=550, width=80, justify="left", bg=bg, pady=10, fg=text_fg)
         self.menu_desc.grid(row=1)
 
         # add image
@@ -115,9 +115,6 @@ class Menu:
         self.error_label = Label(self.error_frame, text="", font=font, fg="red", bg=bg)
         self.error_label.grid(row=0)
 
-        # add loading label
-        self.loading_label = Label(self.error_frame, text="Loading...", font=font, bg=bg, fg=text_fg)
-
     # resize image based on window size
     def resize_img(self, event):
         # get new width and height of window
@@ -131,8 +128,8 @@ class Menu:
         # update image size
         self.img_bg.configure(image=self.img)
 
-
         # get contents of 3.7B folder from GitHub directory
+
     def get_directory(self, url, year):
         # send request to get api url
         response = requests.get(url, headers=headers)
@@ -150,7 +147,6 @@ class Menu:
             folder = f"WakaNats{year}"
 
             if folder in folder_dict:
-                self.loading_label.grid(row=0)
                 self.frame.update()
                 folder_url = folder_dict[folder]
                 # hide menu elements for ranking calculator screen
@@ -191,12 +187,11 @@ class Ranker:
         self.frame.rowconfigure(3, weight=1)
         self.frame.columnconfigure(0, weight=1)
 
-        self.error_frame = Frame(bg=bg)
-        self.error_frame.grid(pady=(0, 5))
+        self.label_frame = Frame(bg=bg)
+        self.label_frame.grid(pady=(0, 5))
 
         self.button_frame = Frame(bg=bg)
         self.button_frame.grid(pady=(5, 25))
-
 
         # add text
         self.ranker_heading = Label(self.frame, text=f"Ranking Calculator - {year}", font=heading_font,
@@ -205,7 +200,7 @@ class Ranker:
 
         self.ranker_desc = Label(self.frame,
                                  text="Below is a preview of the rankings. To download the file as a .csv file,"
-                                      " click 'Export to csv'.", font=font, wrap=530, width=80,
+                                      " click 'Export to csv'.", font=font, wrap=550, width=80,
                                  justify="left", bg=bg, fg=text_fg)
         self.ranker_desc.grid(row=1, pady=5)
 
@@ -227,22 +222,29 @@ class Ranker:
         # create buttons
         self.button_csv = Button(self.csv_border, text="Export to csv", font=font, bg="#BAFFD3", bd=0,
                                  highlightthickness=5, activebackground=click_clr, activeforeground=text_fg,
-                                 command=lambda: self.export_csv(year), fg=text_fg)
+                                 command=lambda: self.export_csv(year), fg=text_fg, state=DISABLED)
         self.button_csv.grid(row=0, column=0)
         # return to menu
         self.button_return = Button(self.return_border, text="Return", fg=text_fg,
                                     font=font, bg="#C9FFDB", bd=0, highlightthickness=5, activebackground=click_clr,
                                     activeforeground=text_fg,
                                     command=lambda: [self.frame.destroy(), self.button_frame.destroy(),
-                                                     self.error_frame.destroy(), Menu()])
+                                                     self.label_frame.destroy(), Menu()])
         self.button_return.grid(row=0, column=1)
 
-        # add error label
-        self.error_label = Label(self.error_frame, text="", font=font, fg="red", bg=bg)
-        self.error_label.grid(row=0)
+        # add error/processing label
+        self.label = Label(self.label_frame, text="", font=font, fg=text_fg, bg=bg)
+        self.label.grid(row=0)
 
-        # run folder_reader method
-        self.folder_reader(folder_url)
+        # update screen
+        self.frame.update()
+
+        try:
+            # run folder_reader method
+            self.folder_reader(folder_url)
+            # detect if users want to exit
+        except TclError:
+            return
 
     # assign points based on place number
     def points_calculator(self, place, name):
@@ -272,10 +274,14 @@ class Ranker:
             return ranking_dict
 
     # filters for place number and regional name
-    def file_reader(self, file_url):
+    def file_reader(self, file_name, file_url):
         response = requests.get(file_url, headers=headers)
+        self.label.config(text=f"Processing {file_name}")
+        self.frame.update()
+
         if response.status_code == 200:
             contents = response.text.strip().split("\n")
+
             # skip the first line
             for record in contents[1:]:
                 # split line into items at commas
@@ -283,22 +289,21 @@ class Ranker:
                 # check for empty place
                 if line[0] != "" and line[5] != "":
                     self.points_calculator(line[0], line[5])
+
         else:
-            self.error_label.config(text="Failed to get file contents :(")
+            self.label.config(text="Failed to get file contents :(")
 
     # organise ranking dictionary and display it
     def ranking_results(self):
         # print ranking results in descending order
         refined_ranking = dict(sorted(ranking_dict.items(), key=lambda item: item[1], reverse=True))
+        # remove loading text
+        self.results.delete(0, tkinter.END)
         self.results.insert(0, "Place, Association, Points")
         index = 1
         for key, value in refined_ranking.items():
             self.results.insert(index, f"{index}, {key}, {value}")
             index += 1
-
-        # display results list
-        self.results.grid(row=3, column=0, sticky="nsew", padx=(50, 0))
-        self.scrollbar.config(command=self.results.yview)
 
     # filters for and gets number of final files
     def folder_reader(self, year_url):
@@ -308,33 +313,46 @@ class Ranker:
             # get contents of year folder
             contents = response.json()
 
-            # count number of files
-            label_files = Label(self.frame, text=f"Number of files: {len(contents)}", font=font, bg=bg, fg=text_fg)
-            label_files.grid(row=2, pady=(0, 10))
-
-            final_files = []
             for file in contents:
                 # filter for final files
                 if "Final" in file["name"]:
                     # get download url for each final file
-                    final_files.append(file["download_url"])
+                    final_files_dict[file["name"]] = file["download_url"]
 
-            # speed up reading
-            with ThreadPoolExecutor(max_workers=3) as executor:
-                # start 3 parallel processes using file_reader function and final files dict
-                executor.map(self.file_reader, final_files)
+            # count number of files
+            label_files = Label(self.frame, text=f"Number of items in folder: {len(contents)}              "
+                                                 f"            Number of final files: {len(final_files_dict)}",
+                                font=font, bg=bg, fg=text_fg)
+            label_files.grid(row=2, pady=(0, 10))
+            # place elements in descending order on screen
+            self.results.grid(row=3, column=0, sticky="nsew", padx=(50, 0))
+            # tell users that the lisbox is loading
+            self.results.insert(0, "Loading, please wait...")
+            self.scrollbar.config(command=self.results.yview)
+            self.frame.update()
+
+            for key, value in final_files_dict.items():
+                self.file_reader(key, value)
             self.ranking_results()
+            # clear processing label
+            self.label.config(text="")
+
+            # enable csv button when results are done processing
+            self.button_csv.config(state=NORMAL)
 
         else:
-            self.error_label.config(text="Failed to get folder contents :(")
+            self.label.config(text="Failed to get folder contents :(", fg="red")
+
 
     # download results as csv file
     def export_csv(self, year):
+        count = 1
         try:
             # get user's download path
             downloads = str(Path.home() / "Downloads")
+            file_name = f"WakaAmaRanking{year}"
             csv = filedialog.asksaveasfile(initialdir=downloads, filetypes=[("csv file", "*.csv")], mode="w",
-                                           initialfile=f"WakaAmaRanking{year}.csv")
+                                           initialfile=file_name, defaultextension=".csv")
 
             # check if user presses cancel (returning empty value/None)
             if csv is None:
@@ -398,7 +416,8 @@ class Info:
                  "in your year folder.\n12. Commit the change.\n13. Re-run this program." \
                  "\n\nClicking the 'Return' button takes you back to the Menu.\n\nTo close the program, " \
                  "press the x at the top right of the window.\n\nHave fun! :)\n\nCover image by " \
-                 "PublicDomainPictures on Pixabay."
+                 "PublicDomainPictures on Pixabay." \
+
         # add scrollbar
         self.scrollbar = Scrollbar(self.frame, width=21)
         self.scrollbar.grid(row=1, column=1, sticky="nsew")
