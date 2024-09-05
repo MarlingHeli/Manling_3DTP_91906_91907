@@ -22,8 +22,8 @@ folder_dict = {}
 heading_font = ("Yu Gothic UI", "22", "bold")
 heading_fg = "#315944"
 # paragraph and button font
-font = ("Yu Gothic UI Semibold", "12")
-text_fg = "#284A29"
+para_font = ("Yu Gothic UI Semibold", "12")
+para_fg = "#284A29"
 # background colour
 bg = "#FAFFFD"
 # button colours
@@ -32,8 +32,7 @@ click_clr = "#DAFFC7"
 
 
 #######################################################################################################################
-# menu screen that also error checks input
-class Menu:
+class Menu:  # menu screen that also error checks input
     def __init__(self):
         # create frames
         self.frame = Frame(bg=bg)
@@ -48,14 +47,13 @@ class Menu:
         self.button_frame.grid(row=4, column=0, pady=(5, 25))
 
         # add text
-        self.menu_heading = Label(self.frame, text="Waka Ama ranking finder", font=heading_font, bg=bg,
-                                  fg=heading_fg)
+        self.menu_heading = Label(self.frame, text="Waka Ama ranking finder", font=heading_font, bg=bg, fg=heading_fg)
         self.menu_heading.grid(row=0, pady=(30, 0))
 
         self.menu_desc = Label(self.frame,
                                text="Welcome to the unofficial Waka Ama ranking finder! Use this program to "
-                                    "check the results of a previous competition by year.", font=font,
-                               wrap=550, width=80, justify="left", bg=bg, pady=10, fg=text_fg)
+                                    "check the results of a previous competition by year.", font=para_font,
+                               wrap=550, width=80, justify="left", bg=bg, pady=10, fg=para_fg)
         self.menu_desc.grid(row=1)
 
         # add image
@@ -64,7 +62,6 @@ class Menu:
         if response.status_code == 200:
             # open image from image data
             image_data = BytesIO(response.content)
-            # 0pen image from image data
             self.image = Image.open(image_data)
             # copy image which will be used as the new image size when users resize the window
             self.image_copy = self.image.copy()
@@ -74,18 +71,17 @@ class Menu:
             self.img_bg = Label(self.frame, image=self.img)
             self.img_bg.grid(sticky="nsew", padx=50)
 
-            # run resize_img method
             self.img_bg.bind("<Configure>", self.resize_img)
         else:
-            img_label = Label(self.frame, text="Failed to load image :(", bg=bg, font=font, fg="red")
+            img_label = Label(self.frame, text="Failed to load image :(", bg=bg, font=para_font, fg="red")
             img_label.grid(pady=15, padx=10)
 
         # add entry field for years
         self.year_var = StringVar()
         self.year_var.set("")
-        self.year_label = Label(self.button_frame, text="Enter year:", font=font, bg=bg, fg=text_fg)
+        self.year_label = Label(self.button_frame, text="Enter year:", font=para_font, bg=bg, fg=para_fg)
         self.year_entry = Entry(self.button_frame, textvariable=self.year_var, font=("Yu Gothic UI Semibold", "21"),
-                                fg=text_fg, width=5, bg=bg, highlightbackground=outline_clr, highlightthickness=1)
+                                fg=para_fg, width=5, bg=bg, highlightbackground=outline_clr, highlightthickness=1)
         self.year_label.grid(row=0, column=0)
         self.year_entry.grid(row=0, column=1)
 
@@ -97,24 +93,22 @@ class Menu:
         self.help_border.grid(row=0, column=3, padx=50)
 
         # create buttons
-        self.button_find = Button(self.find_border, text="Find", font=font, bg="#BAFFD3", bd=0, highlightthickness=5,
-                                  command=self.year_check, fg=text_fg, activebackground=click_clr,
-                                  activeforeground=text_fg)
+        self.find_button = Button(self.find_border, text="Find", font=para_font, bg="#BAFFD3", bd=0,
+                                  highlightthickness=5, command=self.year_check, fg=para_fg, activebackground=click_clr,
+                                  activeforeground=para_fg)
+        self.find_button.grid(row=1, column=2)
 
-        self.button_find.grid(row=1, column=2)
-
-        self.button_help = Button(self.help_border, text="Help/information", font=font, bg="#C9FFDB", bd=0,
-                                  highlightthickness=5, fg=text_fg, activebackground=click_clr,
+        self.help_button = Button(self.help_border, text="Help/information", font=para_font, bg="#C9FFDB", bd=0,
+                                  highlightthickness=5, fg=para_fg, activebackground=click_clr,
                                   command=lambda: [self.frame.destroy(), self.button_frame.destroy(),
-                                                   self.error_frame.destroy(), Info()], activeforeground=text_fg)
-        self.button_help.grid(row=1, column=3)
+                                                   self.error_frame.destroy(), Info()], activeforeground=para_fg)
+        self.help_button.grid(row=1, column=3)
 
         # add error label
-        self.error_label = Label(self.error_frame, text="", font=font, fg="red", bg=bg)
+        self.error_label = Label(self.error_frame, text="", font=para_font, fg="red", bg=bg)
         self.error_label.grid(row=0)
 
-    # resize image based on window size
-    def resize_img(self, event):
+    def resize_img(self, event):    # resize image based on window size
         # get new width and height of window
         new_width = event.width
         new_height = event.height
@@ -126,9 +120,7 @@ class Menu:
         # update image size
         self.img_bg.configure(image=self.img)
 
-        # get contents of 3.7B folder from GitHub directory
-
-    def get_directory(self, url, year):
+    def get_directory(self, url, year):  # get contents of 3.7B folder from GitHub directory
         # send request to get api url
         response = requests.get(url, headers=headers)
         # 200 is the standard code for a successful http request sent by server
@@ -158,8 +150,7 @@ class Menu:
         else:
             self.error_label.config(text=f"Failed to get directory contents. Status code: {response}")
 
-    # error check year input
-    def year_check(self):
+    def year_check(self):    # error check year input
         try:
             year_input = self.year_var.get()
             year = int(year_input)
@@ -167,7 +158,6 @@ class Menu:
             if 2017 <= year <= 2030:
                 # clear any previous error messages
                 self.error_label.config(text="")
-                # run get_directory method
                 self.get_directory(api_url, year)
             else:
                 self.error_label.config(text="Please enter a year between 2017 and 2030.")
@@ -176,9 +166,8 @@ class Menu:
 
 
 #######################################################################################################################
-# ranking calculator screen that calculates points
 class Ranker:
-    def __init__(self, folder_url, year):
+    def __init__(self, folder_url, year):   # ranking calculator screen that calculates points
         # create frames
         self.frame = Frame(bg=bg)
         self.frame.grid(sticky="nsew")
@@ -198,8 +187,8 @@ class Ranker:
 
         self.ranker_desc = Label(self.frame,
                                  text="Below is a preview of the rankings. To download the file as a .csv file,"
-                                      " click 'Export to csv'.", font=font, wrap=550, width=80,
-                                 justify="left", bg=bg, fg=text_fg)
+                                      " click 'Export to csv'.", font=para_font, wrap=550, width=80,
+                                 justify="left", bg=bg, fg=para_fg)
         self.ranker_desc.grid(row=1, pady=5)
 
         # create scroll bar
@@ -207,8 +196,8 @@ class Ranker:
         self.scrollbar.grid(row=3, column=1, sticky="ns", padx=(0, 50))
 
         # create results list
-        self.results = Listbox(self.frame, bg="white", width=60, height=11, font=font,
-                               yscrollcommand=self.scrollbar.set, fg=text_fg)
+        self.results = Listbox(self.frame, bg="white", width=60, height=11, font=para_font,
+                               yscrollcommand=self.scrollbar.set, fg=para_fg)
 
         # give buttons a consistent black border
         self.csv_border = Frame(self.button_frame, highlightbackground=outline_clr, highlightthickness=1, bd=1)
@@ -218,34 +207,33 @@ class Ranker:
         self.return_border.grid(row=0, column=1, padx=50)
 
         # create buttons
-        self.button_csv = Button(self.csv_border, text="Export to csv", font=font, bg="#BAFFD3", bd=0,
-                                 highlightthickness=5, activebackground=click_clr, activeforeground=text_fg,
-                                 command=lambda: self.export_csv(year), fg=text_fg, state=DISABLED)
-        self.button_csv.grid(row=0, column=0)
+        self.csv_button = Button(self.csv_border, text="Export to csv", font=para_font, bg="#BAFFD3", bd=0,
+                                 highlightthickness=5, activebackground=click_clr, activeforeground=para_fg,
+                                 command=lambda: self.export_csv(year), fg=para_fg, state=DISABLED)
+        self.csv_button.grid(row=0, column=0)
         # return to menu
-        self.button_return = Button(self.return_border, text="Return", fg=text_fg,
-                                    font=font, bg="#C9FFDB", bd=0, highlightthickness=5, activebackground=click_clr,
-                                    activeforeground=text_fg,
+        self.return_button = Button(self.return_border, text="Return", fg=para_fg,
+                                    font=para_font, bg="#C9FFDB", bd=0, highlightthickness=5,
+                                    activebackground=click_clr, activeforeground=para_fg,
                                     command=lambda: [self.frame.destroy(), self.button_frame.destroy(),
                                                      self.label_frame.destroy(), Menu()])
-        self.button_return.grid(row=0, column=1)
+        self.return_button.grid(row=0, column=1)
 
         # add error/processing label
-        self.label = Label(self.label_frame, text="", font=font, fg=text_fg, bg=bg)
+        self.label = Label(self.label_frame, text="", font=para_font, fg=para_fg, bg=bg)
         self.label.grid(row=0)
 
         # update screen
         self.frame.update()
 
+        # run folder_reader method
         try:
-            # run folder_reader method
             self.folder_reader(folder_url)
             # detect if users want to exit
         except TclError:
             return
 
-    # assign points based on place number
-    def points_calculator(self, place, name, dictionary):
+    def points_calculator(self, place, name, dictionary):    # assign points based on place number
         points_dict = {
             "1": 8,
             "2": 7,
@@ -271,15 +259,13 @@ class Ranker:
 
             return dictionary
 
-    # filters for place number and regional name
-    def file_reader(self, file_name, file_url, dictionary):
+    def file_reader(self, file_name, file_url, dictionary):    # filters for place number and regional name
         response = requests.get(file_url, headers=headers)
         self.label.config(text=f"Processing {file_name}")
         self.frame.update()
 
         if response.status_code == 200:
             contents = response.text.strip().split("\n")
-
             # skip the first line
             for record in contents[1:]:
                 # split line into items at commas
@@ -287,7 +273,6 @@ class Ranker:
                 # check for empty place
                 if line[0] != "" and line[5] != "":
                     self.points_calculator(line[0], line[5], dictionary)
-
         else:
             self.label.config(text="Failed to get file contents :(")
 
@@ -303,18 +288,16 @@ class Ranker:
             self.results.insert(index, f"{index}, {key}, {value}")
             index += 1
 
-    # filters for and gets number of final files
-    def folder_reader(self, year_url):
+    def folder_reader(self, year_url):    # filters for and gets number of final files
         final_files_dict = {}
         ranking_dict = {}
         response = requests.get(year_url, headers=headers)
-        # if response successfully gets url for year folder
         if response.status_code == 200:
             # get contents of year folder
             contents = response.json()
 
+            # filter for final files
             for file in contents:
-                # filter for final files
                 if "Final" in file["name"]:
                     # get download url for each final file
                     final_files_dict[file["name"]] = file["download_url"]
@@ -322,31 +305,27 @@ class Ranker:
             # count number of files
             label_files = Label(self.frame, text=f"Number of items in folder: {len(contents)}              "
                                                  f"            Number of final files: {len(final_files_dict)}",
-                                font=font, bg=bg, fg=text_fg)
+                                font=para_font, bg=bg, fg=para_fg)
             label_files.grid(row=2, pady=(0, 10))
             # place elements in descending order on screen
             self.results.grid(row=3, column=0, sticky="nsew", padx=(50, 0))
-            # tell users that the lisbox is loading
+            # tell users that the listbox is loading
             self.results.insert(0, "Loading, please wait...")
             self.scrollbar.config(command=self.results.yview)
             self.frame.update()
 
+            # run file reader for each final file
             for key, value in final_files_dict.items():
                 self.file_reader(key, value, ranking_dict)
             self.ranking_results(ranking_dict)
             # clear processing label
             self.label.config(text="")
-
             # enable csv button when results are done processing
-            self.button_csv.config(state=NORMAL)
-
+            self.csv_button.config(state=NORMAL)
         else:
             self.label.config(text="Failed to get folder contents :(", fg="red")
 
-
-    # download results as csv file
-    def export_csv(self, year):
-        count = 1
+    def export_csv(self, year):    # download results as csv file
         try:
             # get user's download path
             downloads = str(Path.home() / "Downloads")
@@ -369,7 +348,7 @@ class Ranker:
 
 
 #######################################################################################################################
-class Info:
+class Info:  # information and tutorial screen
     def __init__(self):
         # create frames
         self.frame = Frame(bg=bg, padx=50)
@@ -416,20 +395,20 @@ class Info:
                  "in your year folder.\n12. Commit the change.\n13. Re-run this program." \
                  "\n\nClicking the 'Return' button takes you back to the Menu.\n\nTo close the program, " \
                  "press the x at the top right of the window.\n\nHave fun! :)\n\nCover image by " \
-                 "PublicDomainPictures on Pixabay." \
+                 "PublicDomainPictures on Pixabay."
 
         # add scrollbar
         self.scrollbar = Scrollbar(self.frame, width=21)
         self.scrollbar.grid(row=1, column=1, sticky="nsew")
 
         # text widget for multiline text
-        self.info_window = Text(self.frame, font=font, width=60, height=13, bg="white", wrap=WORD, padx=20, pady=20,
-                                yscrollcommand=self.scrollbar.set, fg=text_fg)
+        self.info_window = Text(self.frame, font=para_font, width=60, height=13, bg="white", wrap=WORD, padx=20, pady=20,
+                                yscrollcommand=self.scrollbar.set, fg=para_fg)
         self.info_window.grid(row=1, sticky="nsew")
 
         # create link that will go in the text box
         self.link = Label(self.info_window, text="https://github.com/MarlingHeli/Manling_3DTP_91906_91907.git",
-                          font=font + ("underline",), cursor="hand2", fg="green", bg=bg)
+                          font=para_font + ("underline",), cursor="hand2", fg="green", bg=bg)
         self.link.bind("<Button-1>", lambda e: self.callback("https://github.com/MarlingHeli/Manling_3DTP_91906_91907"
                                                              ".git"))
 
@@ -448,14 +427,13 @@ class Info:
         self.return_border.grid(row=0, pady=(20, 10))
 
         # create button
-        self.button_return = Button(self.return_border, text="Return", font=font, bg="#BAFFD3", bd=0,
-                                    highlightthickness=5, fg=text_fg, activebackground=click_clr,
-                                    activeforeground=text_fg,
+        self.return_button = Button(self.return_border, text="Return", font=para_font, bg="#BAFFD3", bd=0,
+                                    highlightthickness=5, fg=para_fg, activebackground=click_clr,
+                                    activeforeground=para_fg,
                                     command=lambda: [self.frame.destroy(), self.button_frame.destroy(), Menu()])
-        self.button_return.grid(row=0)
+        self.return_button.grid(row=0)
 
-    # open the hyperlink online
-    def callback(self, url):
+    def callback(self, url):    # open the hyperlink online
         webbrowser.open_new_tab(url)
 
 
@@ -468,12 +446,10 @@ if __name__ == "__main__":
     window.geometry("700x500")
     # set minimum window size
     window.minsize(750, 550)
-    # change window background colour
     window.configure(bg=bg)
     # let window adjust size
     window.columnconfigure(0, weight=1)
     window.rowconfigure(0, weight=1)
-    # run Menu class first
     Menu()
     # keep window on screen
     window.mainloop()
