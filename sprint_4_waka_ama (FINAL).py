@@ -1,3 +1,4 @@
+# this version has no token
 import requests  # send requests to GitHub server to retrieve data
 import tkinter.messagebox  # create messagebox for error window
 import webbrowser  # take users to the web via hyperlink
@@ -7,14 +8,10 @@ from tkinter import *  # use for tkinter widgets for GUI
 from tkinter import filedialog  # used to open file explorer to save csv file
 from PIL import Image, ImageTk  # used to add image
 
-# use token to send more requests to server
-token = ""
-
 # use GitHub repo for directory
 api_url = "https://api.github.com/repos/MarlingHeli/Manling_3DTP_91906_91907/contents/Waka Ama data/3.7B resource files"
 img_url = "https://raw.githubusercontent.com/MarlingHeli/Manling_3DTP_91906_91907" \
           "/a1cf182892fb46231a34290740f6c26fd489c216/boating-220066_1280.jpg"
-headers = {"Authorization": f"Bearer {token}"}
 
 ranking_dict = {}
 folder_dict = {}
@@ -61,7 +58,7 @@ class Menu:
         self.menu_desc.grid(row=1)
 
         # add image
-        response = requests.get(img_url, headers=headers)
+        response = requests.get(img_url)
         # check if request was successful
         if response.status_code == 200:
             # open image from image data
@@ -132,7 +129,7 @@ class Menu:
 
     def get_directory(self, url, year):
         # send request to get api url
-        response = requests.get(url, headers=headers)
+        response = requests.get(url)
         # 200 is the standard code for a successful http request sent by server
         if response.status_code == 200:
             # grab all the information about files in the 3.7B folder (as dictionaries in list)
@@ -275,7 +272,7 @@ class Ranker:
 
     # filters for place number and regional name
     def file_reader(self, file_name, file_url):
-        response = requests.get(file_url, headers=headers)
+        response = requests.get(file_url)
         self.label.config(text=f"Processing {file_name}")
         self.frame.update()
 
@@ -307,7 +304,7 @@ class Ranker:
 
     # filters for and gets number of final files
     def folder_reader(self, year_url):
-        response = requests.get(year_url, headers=headers)
+        response = requests.get(year_url)
         # if response successfully gets url for year folder
         if response.status_code == 200:
             # get contents of year folder
