@@ -1,4 +1,4 @@
-# this version has no token
+# version without token
 import requests  # send requests to GitHub server to retrieve data
 import tkinter.messagebox  # create messagebox for error window
 import webbrowser  # take users to the web via hyperlink
@@ -13,9 +13,7 @@ api_url = "https://api.github.com/repos/MarlingHeli/Manling_3DTP_91906_91907/con
 img_url = "https://raw.githubusercontent.com/MarlingHeli/Manling_3DTP_91906_91907" \
           "/a1cf182892fb46231a34290740f6c26fd489c216/boating-220066_1280.jpg"
 
-ranking_dict = {}
 folder_dict = {}
-final_files_dict = {}
 
 # heading font
 heading_font = ("Yu Gothic UI", "22", "bold")
@@ -244,7 +242,7 @@ class Ranker:
             return
 
     # assign points based on place number
-    def points_calculator(self, place, name):
+    def points_calculator(self, place, name, dictionary):
         points_dict = {
             "1": 8,
             "2": 7,
@@ -256,22 +254,22 @@ class Ranker:
             "8": 1,
         }
         # initialise keys and values
-        if name not in ranking_dict:
-            ranking_dict[name] = 0
+        if name not in dictionary:
+            dictionary[name] = 0
 
         # give 0 points to disqualified teams
         if place == "DNS" or place == "DQ" or place == "Disqualified":
-            ranking_dict[name] += 0
+            dictionary[name] += 0
             # print("points: +0")
         else:
             # retrieve points based on place number and add to ranking_dict.
             # retrieves 1 point if place number is not in points_dict.
-            ranking_dict[name] += points_dict.get(place, 1)
+            dictionary[name] += points_dict.get(place, 1)
 
-            return ranking_dict
+            return dictionary
 
     # filters for place number and regional name
-    def file_reader(self, file_name, file_url):
+    def file_reader(self, file_name, file_url, dictionary):
         response = requests.get(file_url)
         self.label.config(text=f"Processing {file_name}")
         self.frame.update()
@@ -285,15 +283,15 @@ class Ranker:
                 line = record.split(",")
                 # check for empty place
                 if line[0] != "" and line[5] != "":
-                    self.points_calculator(line[0], line[5])
+                    self.points_calculator(line[0], line[5], dictionary)
 
         else:
             self.label.config(text="Failed to get file contents :(")
 
     # organise ranking dictionary and display it
-    def ranking_results(self):
+    def ranking_results(self, dictionary):
         # print ranking results in descending order
-        refined_ranking = dict(sorted(ranking_dict.items(), key=lambda item: item[1], reverse=True))
+        refined_ranking = dict(sorted(dictionary.items(), key=lambda item: item[1], reverse=True))
         # remove loading text
         self.results.delete(0, tkinter.END)
         self.results.insert(0, "Place, Association, Points")
@@ -304,6 +302,8 @@ class Ranker:
 
     # filters for and gets number of final files
     def folder_reader(self, year_url):
+        final_files_dict = {}
+        ranking_dict = {}
         response = requests.get(year_url)
         # if response successfully gets url for year folder
         if response.status_code == 200:
@@ -329,8 +329,8 @@ class Ranker:
             self.frame.update()
 
             for key, value in final_files_dict.items():
-                self.file_reader(key, value)
-            self.ranking_results()
+                self.file_reader(key, value, ranking_dict)
+            self.ranking_results(ranking_dict)
             # clear processing label
             self.label.config(text="")
 
