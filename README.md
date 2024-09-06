@@ -1,7 +1,7 @@
 This program reads Waka Ama's competition data, calculates the total points earned by each association, and ranks them. It sources the data from Waka Ama Data > 3.7B Resource Files in this GitHub repository.
 
 Running the program:
-You will need an IDE to run this code.
+You will need an IDE and wifi to run this code.
 If you do not plan on contributing to the repository, the easiest way to run the program is to copy paste the code into your IDE. Open waka_ama_ranking_finder > Copy raw data > Paste into your preferred IDE.
 
 How to use the program:
