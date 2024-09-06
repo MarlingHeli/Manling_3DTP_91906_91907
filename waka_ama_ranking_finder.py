@@ -1,3 +1,4 @@
+# version with no token
 import requests  # send requests to GitHub server to retrieve data
 import tkinter.messagebox  # create messagebox for error window
 import webbrowser  # take users to the web via hyperlink
@@ -104,7 +105,7 @@ class Menu:  # menu screen that also error checks input
         self.error_label = Label(self.error_frame, text="", font=para_font, fg="red", bg=bg)
         self.error_label.grid(row=0)
 
-    def resize_img(self, event):    # resize image based on window size
+    def resize_img(self, event):  # resize image based on window size
         # get new width and height of window
         new_width = event.width
         new_height = event.height
@@ -146,7 +147,7 @@ class Menu:  # menu screen that also error checks input
         else:
             self.error_label.config(text=f"Failed to get directory contents. Status code: {response}")
 
-    def year_check(self):    # error check year input
+    def year_check(self):  # error check year input
         try:
             year_input = self.year_var.get()
             year = int(year_input)
@@ -163,15 +164,15 @@ class Menu:  # menu screen that also error checks input
 
 #######################################################################################################################
 class Ranker:
-    def __init__(self, folder_url, year):   # ranking calculator screen that calculates points
+    def __init__(self, folder_url, year):  # ranking calculator screen that calculates points
         # create frames
         self.frame = Frame(bg=bg)
         self.frame.grid(sticky="nsew")
-        self.frame.rowconfigure(3, weight=1)
+        self.frame.rowconfigure(2, weight=1)
         self.frame.columnconfigure(0, weight=1)
 
         self.label_frame = Frame(bg=bg)
-        self.label_frame.grid(pady=(0, 5))
+        self.label_frame.grid(pady=5)
 
         self.button_frame = Frame(bg=bg)
         self.button_frame.grid(pady=(5, 25))
@@ -181,15 +182,13 @@ class Ranker:
                                     bg=bg, fg=heading_fg)
         self.ranker_heading.grid(row=0, pady=(20, 0))
 
-        self.ranker_desc = Label(self.frame,
-                                 text="Below is a preview of the rankings. To download the file as a .csv file,"
-                                      " click 'Export to csv'.", font=para_font, wrap=550, width=80,
+        self.ranker_desc = Label(self.frame, font=para_font, wrap=550, width=80,
                                  justify="left", bg=bg, fg=para_fg)
-        self.ranker_desc.grid(row=1, pady=5)
+        self.ranker_desc.grid(row=1, pady=10)
 
         # create scroll bar
         self.scrollbar = Scrollbar(self.frame, width=21)
-        self.scrollbar.grid(row=3, column=1, sticky="ns", padx=(0, 50))
+        self.scrollbar.grid(row=2, column=1, sticky="ns", padx=(0, 50))
 
         # create results list
         self.results = Listbox(self.frame, bg="white", width=60, height=11, font=para_font,
@@ -229,7 +228,7 @@ class Ranker:
         except TclError:
             return
 
-    def points_calculator(self, place, name, dictionary):    # assign points based on place number
+    def points_calculator(self, place, name, dictionary):  # assign points based on place number
         points_dict = {
             "1": 8,
             "2": 7,
@@ -255,12 +254,12 @@ class Ranker:
 
             return dictionary
 
-    def file_reader(self, file_name, file_url, dictionary):    # filters for place number and regional name
+    def file_reader(self, file_name, file_url, dictionary):  # filters for place number and regional name
         response = requests.get(file_url)
-        self.label.config(text=f"Processing {file_name}")
-        self.frame.update()
 
         if response.status_code == 200:
+            self.label.config(text=f"Processing {file_name}")
+            self.frame.update()
             contents = response.text.strip().split("\n")
             # skip the first line
             for record in contents[1:]:
@@ -270,7 +269,8 @@ class Ranker:
                 if line[0] != "" and line[5] != "":
                     self.points_calculator(line[0], line[5], dictionary)
         else:
-            self.label.config(text="Failed to get file contents :(")
+            self.label.config(text="Failed to get file contents :(", fg="red")
+            self.frame.update()
 
     # organise ranking dictionary and display it
     def ranking_results(self, dictionary):
@@ -284,7 +284,7 @@ class Ranker:
             self.results.insert(index, f"{index}, {key}, {value}")
             index += 1
 
-    def folder_reader(self, year_url):    # filters for and gets number of final files
+    def folder_reader(self, year_url):  # filters for and gets number of final files
         final_files_dict = {}
         ranking_dict = {}
         response = requests.get(year_url)
@@ -299,12 +299,11 @@ class Ranker:
                     final_files_dict[file["name"]] = file["download_url"]
 
             # count number of files
-            label_files = Label(self.frame, text=f"Number of items in folder: {len(contents)}              "
-                                                 f"            Number of final files: {len(final_files_dict)}",
-                                font=para_font, bg=bg, fg=para_fg)
-            label_files.grid(row=2, pady=(0, 10))
+            self.ranker_desc.config(text=f"Below is a preview of the rankings. To download the file as a .csv file,"
+                                         f" click 'Export to csv'. Number of items in folder: {len(contents)}. Number "
+                                         f"of final files: {len(final_files_dict)}")
             # place elements in descending order on screen
-            self.results.grid(row=3, column=0, sticky="nsew", padx=(50, 0))
+            self.results.grid(row=2, column=0, sticky="nsew", padx=(50, 0))
             # tell users that the listbox is loading
             self.results.insert(0, "Loading, please wait...")
             self.scrollbar.config(command=self.results.yview)
@@ -321,7 +320,7 @@ class Ranker:
         else:
             self.label.config(text="Failed to get folder contents :(", fg="red")
 
-    def export_csv(self, year):    # download results as csv file
+    def export_csv(self, year):  # download results as csv file
         try:
             # get user's download path
             downloads = str(Path.home() / "Downloads")
@@ -398,7 +397,8 @@ class Info:  # information and tutorial screen
         self.scrollbar.grid(row=1, column=1, sticky="nsew")
 
         # text widget for multiline text
-        self.info_window = Text(self.frame, font=para_font, width=60, height=13, bg="white", wrap=WORD, padx=20, pady=20,
+        self.info_window = Text(self.frame, font=para_font, width=60, height=13, bg="white", wrap=WORD, padx=20,
+                                pady=20,
                                 yscrollcommand=self.scrollbar.set, fg=para_fg)
         self.info_window.grid(row=1, sticky="nsew")
 
@@ -429,7 +429,7 @@ class Info:  # information and tutorial screen
                                     command=lambda: [self.frame.destroy(), self.button_frame.destroy(), Menu()])
         self.return_button.grid(row=0)
 
-    def callback(self, url):    # open the hyperlink online
+    def callback(self, url):  # open the hyperlink online
         webbrowser.open_new_tab(url)
 
 
